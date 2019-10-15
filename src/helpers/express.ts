@@ -13,31 +13,13 @@
  * limitations under the License.
  */
 
-import fs from "fs";
-import path from "path";
 import morgan from "morgan";
 import isString from "lodash.isstring";
 import { Application, NextFunction, Request, RequestHandler, Response } from "express-serve-static-core";
 import { ILogger } from "../interfaces/ILogger";
 import { IRouter } from "../interfaces/IRouter";
 
-const mime: { [k: string]: string } = {
-	".png": "image/png",
-	".ico": "image/x-icon",
-};
-
-export function favicon(filename: string, pattern: RegExp = /\/favicon\.(png|ico)$/) {
-	filename = path.resolve(filename);
-	return function(request: Request, response: Response, next: NextFunction) {
-		if (pattern.test(request.url)) {
-			const ext = path.extname(filename);
-			response.set("Content-Type", mime[ext]);
-			fs.createReadStream(filename).pipe(response);
-		} else next();
-	};
-}
-
-function promisify(handler: RequestHandler) {
+export function promisify(handler: RequestHandler) {
 	return function(...args: any[]) {
 		const next = args[args.length - 1];
 		return Promise.resolve((<Function>handler)(...args)).catch(next);
@@ -105,7 +87,7 @@ export function requireHTTPS(request: Request, response: Response, next: NextFun
 
 export function notFound(request: Request, response: Response, next: NextFunction) {
 	const error = new Error();
-	(<any>error).status = 404;
+	(<any>error).code = 404;
 	next(error);
 }
 
@@ -125,7 +107,7 @@ export function createErrorHandler(logger: ILogger) {
 		} else {
 			logger.d(error.message);
 		}
-		response.status((<any>error).status).json({
+		response.status((<any>error).code).json({
 			success: false,
 			code: (<any>error).code,
 			message: error.message,
