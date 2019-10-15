@@ -16,6 +16,7 @@
 import debug from "debug";
 import StackTrace from "stacktrace-js";
 import { ILogger } from "../interfaces/ILogger";
+import Package from "../../package.json";
 
 function printStackTraces(traces: any[]) {
 	for (const trace of traces) {
@@ -24,6 +25,7 @@ function printStackTraces(traces: any[]) {
 }
 
 export function createLogger(tag: string): ILogger {
+	tag = Package.name.concat(":", tag);
 	const logger = debug(tag);
 	return {
 		i(message: string) {
