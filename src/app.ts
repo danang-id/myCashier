@@ -21,12 +21,12 @@ import { json, urlencoded } from "body-parser";
 
 import Controllers from "./controller";
 import Services from "./services";
-import { createErrorHandler, createRouter, showLog } from "./helpers/express";
+import { createErrorHandler, createRouter, promisify, showLog } from "./helpers/express";
 import { createLogger } from "./helpers/logger";
 
 const app = express();
 const router = createRouter(app);
-const logger = createLogger("bcaf12-point-of-sales:Application");
+const logger = createLogger("Application");
 const server = new http.Server(app);
 const port = process.env.PORT || 9000;
 const corsWhiteList = ["http://localhost:" + port];
@@ -41,7 +41,7 @@ const corsOptions: CorsOptions = {
 };
 
 app.use(json());
-app.use(urlencoded({ extended: false }));
+app.use(urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(showLog(logger));
 
@@ -54,7 +54,7 @@ for (const key in Services) {
 	}
 }
 
-app.use(Controllers.serve);
+app.use(promisify(Controllers.serve));
 app.use(createErrorHandler(logger));
 
 server.listen(port, function () {
