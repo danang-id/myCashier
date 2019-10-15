@@ -14,24 +14,9 @@
  */
 
 
-import fs from "fs";
-import path from "path";
 import { notFound } from "../helpers/express";
 import { NextFunction, Request, Response } from "express-serve-static-core";
 
 export async function serve(request: Request, response: Response, next: NextFunction) {
-	if (request.originalUrl.substr(0, 4) === "/api") {
-		notFound(request, response, next);
-		return;
-	}
-	try {
-		const indexPath = path.join(__dirname, "..", "..", "client", "build", "index.html");
-		const indexContent = fs.readFileSync(indexPath, "utf-8");
-		response
-			.status(200)
-			.set("Content-Type", "text/html; charset=utf-8")
-			.send(indexContent);
-	} catch (error) {
-		throw error;
-	}
+	notFound(request, response, next);
 }
