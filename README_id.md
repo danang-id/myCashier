@@ -89,7 +89,7 @@ Kami menggunakan [SemVer](http://semver.org/) untuk manajemen versi. Untuk melih
 
 * **Danang Galuh Tegar Prasetyo** - _Pemulai proyek_ - [danang-id](https://gitlab.com/danang-id)
 
-Lihat juga daftar [kontributor-kontributor](https://gitlab.com/danang-id/bcaf12-point-of-sales/contributors) yang telah berpartisipasi dalam proyek ini.
+Lihat juga daftar [kontributor-kontributor](https://gitlab.com/danang-id/bcaf12-point-of-sales/-/graphs/master) yang telah berpartisipasi dalam proyek ini.
 
 ## Lisensi
 

@@ -89,7 +89,7 @@ We use [SemVer](http://semver.org/) for version management. For the versions ava
 
 * **Danang Galuh Tegar Prasetyo** - _Initial work_ - [danang-id](https://gitlab.com/danang-id)
 
-See also the list of [contributors](https://gitlab.com/danang-id/bcaf12-point-of-sales/contributors) who participated in this project.
+See also the list of [contributors](https://gitlab.com/danang-id/bcaf12-point-of-sales/-/graphs/master) who participated in this project.
 
 ## License
 
