@@ -17,71 +17,121 @@
  */
 
 import { HTTP_METHOD } from "./helpers/express";
+import packageJson from "../package.json";
 
 function endpoint(uri: string) {
-	return "/api/v1/".concat(uri);
+	const version = "v".concat(packageJson.version.split(".")[0]);
+	return "/api/".concat(version).concat("/").concat(uri);
 }
 
 export const Services: ServicesType = {
 	GetCategories: {
 		endpoint: endpoint("categories"),
 		method: HTTP_METHOD.GET,
-		handler: "getCategories"
+		handler: "getCategories",
+		useAuth: true
 	},
 	GetCategory: {
 		endpoint: endpoint("category"),
 		method: HTTP_METHOD.GET,
-		handler: "getCategory"
+		handler: "getCategory",
+		useAuth: true
 	},
 	CreateCategory: {
 		endpoint: endpoint("category"),
 		method: HTTP_METHOD.POST,
-		handler: "createCategory"
+		handler: "createCategory",
+		useAuth: true
 	},
 	ModifyCategory: {
 		endpoint: endpoint("category"),
 		method: HTTP_METHOD.PATCH,
-		handler: "modifyCategory"
+		handler: "modifyCategory",
+		useAuth: true
 	},
 	DeleteCategory: {
 		endpoint: endpoint("category"),
 		method: HTTP_METHOD.DELETE,
-		handler: "deleteCategory"
+		handler: "deleteCategory",
+		useAuth: true
 	},
 	GetProducts: {
 		endpoint: endpoint("products"),
 		method: HTTP_METHOD.GET,
-		handler: "getProducts"
+		handler: "getProducts",
+		useAuth: true
 	},
 	GetProduct: {
 		endpoint: endpoint("product"),
 		method: HTTP_METHOD.GET,
-		handler: "getProduct"
+		handler: "getProduct",
+		useAuth: true
 	},
 	CreateProduct: {
 		endpoint: endpoint("product"),
 		method: HTTP_METHOD.POST,
-		handler: "createProduct"
+		handler: "createProduct",
+		useAuth: true
 	},
 	ModifyProduct: {
 		endpoint: endpoint("product"),
 		method: HTTP_METHOD.PATCH,
-		handler: "modifyProduct"
+		handler: "modifyProduct",
+		useAuth: true
 	},
 	DeleteProduct: {
 		endpoint: endpoint("product"),
 		method: HTTP_METHOD.DELETE,
-		handler: "deleteProduct"
+		handler: "deleteProduct",
+		useAuth: true
 	},
-	AddProductQuantity: {
+	AddProductStock: {
 		endpoint: endpoint("product/add"),
 		method: HTTP_METHOD.POST,
-		handler: "addProductQuantity"
+		handler: "addProductStock",
+		useAuth: true
 	},
-	ReduceProductQuantity: {
+	ReduceProductStock: {
 		endpoint: endpoint("product/reduce"),
 		method: HTTP_METHOD.POST,
-		handler: "reduceProductQuantity"
+		handler: "reduceProductStock",
+		useAuth: true
+	},
+	GetTransaction: {
+		endpoint: endpoint("transaction"),
+		method: HTTP_METHOD.GET,
+		handler: "getTransaction",
+		useAuth: true
+	},
+	CreateNewTransaction: {
+		endpoint: endpoint("transaction"),
+		method: HTTP_METHOD.POST,
+		handler: "createNewTransaction",
+		useAuth: true
+	},
+	AddProductTransactionQuantity: {
+		endpoint: endpoint("transaction/add"),
+		method: HTTP_METHOD.POST,
+		handler: "addProductTransactionQuantity",
+		useAuth: true
+	},
+	ReduceProductTransactionQuantity: {
+		endpoint: endpoint("transaction/reduce"),
+		method: HTTP_METHOD.POST,
+		handler: "reduceProductTransactionQuantity",
+		useAuth: true
+	},
+	RegisterUser: {
+		endpoint: endpoint("register"),
+		method: HTTP_METHOD.POST,
+		handler: "registerUser",
+		useAuth: false
+	},
+	SignInUser: {
+		endpoint: endpoint("sign_in"),
+		method: HTTP_METHOD.POST,
+		handler: "signInUser",
+		useAuth: false
 	},
 };
 
@@ -91,6 +141,7 @@ type ServicesType = {
 	[k: string]: {
 		endpoint: string,
 		method: HTTP_METHOD,
-		handler: string
+		handler: string,
+		useAuth: boolean
 	}
 }
