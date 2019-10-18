@@ -1,6 +1,7 @@
-<p align="center">
-  <a href="https://www.arkademy.com/" target="blank"><img src="https://www.arkademy.com/img/logo%20arkademy-01.9c1222ba.png" width="300" alt="Arkademy" /></a>
-  
+<p style="text-align: center;">
+
+<a href="https://www.arkademy.com/" target="blank"><img src="https://www.arkademy.com/img/logo%20arkademy-01.9c1222ba.png" width="300" alt="Arkademy" /></a>
+
 # Point of Sales
 
 **English** | [Bahasa Indonesia](README_id.md)
