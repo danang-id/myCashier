@@ -13,210 +13,165 @@
  * limitations under the License.
  */
 
-
 import { Request, Response } from "express-serve-static-core";
 
-import { initialiseConnection, closeConnection } from "../helpers/database";
-import { sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
+import { getModel } from "../helpers/database";
+import { sendSuccessResponse, throwError, validateRequest, RequestRequirements } from "../helpers/express";
 import { UUID } from "../helpers/uuid";
-import { Category } from "../model/Category";
-import { Product } from "../model/Product";
-import { IProduct } from "../interfaces/model/IProduct";
+import { ICategory } from "../model/ICategory";
+import { IProduct } from "../model/IProduct";
+import { ModelChoice } from "../model/factory/DatabaseFactory";
 
 export async function getProducts(request: Request, response: Response) {
-	let connection;
+	const Product = getModel(ModelChoice.Product);
 	try {
-		connection = await initialiseConnection();
-		let useCondition = false;
-		let condition = "";
+		await Product.initialise();
+		let products = await Product.fetch<IProduct>();
+		// Process search query
 		if (!!request.query.query) {
-			// TODO: SQL Injection Warning
-			condition = condition.concat('name LIKE "%' + request.query.query + '%" ');
-			useCondition = true;
+			products = products.filter((product) => {
+				return product.name.toLowerCase().includes(request.query.query.toLowerCase());
+			});
 		}
-		if (!!request.query.sort_by) {
-			if (
-				request.query.sort_by === 'name' ||
-				request.query.sort_by === 'category_id' ||
-				request.query.sort_by === 'updated_at'
-			) {
-				let sortMethod = 'ASC';
-				if (request.query.sort_method.toUpperCase() === 'ASC' || request.query.sort_method.toUpperCase() === 'DESC' ) {
-					sortMethod = request.query.sort_method.toUpperCase();
-				}
-				// TODO: SQL Injection Warning
-				condition = condition.concat('ORDER BY ' + request.query.sort_by.toLowerCase() + ' ' + sortMethod + ' ');
-				useCondition = true;
+		// Sort search results
+		if (!!request.query.sort_by && (
+			request.query.sort_by === 'name' ||
+			request.query.sort_by === 'category_id' ||
+			request.query.sort_by === 'updated_at'
+		)) {
+			let sortMethod = 1;
+			function compare(a: any, b: any): number {
+				return (a[request.query.sort_by] > b[request.query.sort_by]) ? sortMethod :
+					((b[request.query.sort_by] > a[request.query.sort_by]) ? (-1 * sortMethod) : 0);
 			}
+			products = products.sort(compare);
 		}
-		const products = useCondition ? await Product.fetch(connection, condition) : await Product.fetch(connection);
-		let usePagination = false;
-		let page = 0;
-		let pageBy = 10;
-		if (!!request.query.page) {
-			request.query.page = parseInt(request.query.page);
-			if (request.query.page >= 0) {
-				page = request.query.page;
-				if (!!request.query.page_by) {
-					request.query.page_by = parseInt(request.query.page_by);
-					if (request.query.page_by > 0) {
-						pageBy = request.query.page_by;
-					}
-				}
-				usePagination = true;
-			}
-		}
-		const pagedProducts: IProduct[][] = [];
-		if (usePagination) {
-			let iterationIndex = 0;
-			let iterationPage = 0;
-			for (const product of products) {
-				if (iterationIndex === 0) {
-					pagedProducts.push([]);
-				}
-				pagedProducts[iterationPage].push(product);
-				iterationIndex++;
-				if (iterationIndex === pageBy) {
-					iterationIndex = 0;
-					iterationPage++;
-				}
-			}
-			if (page > (pagedProducts.length - 1)) {
-				page = pagedProducts.length - 1
-			}
-		}
-		sendSuccessResponse(response, usePagination ? pagedProducts[page] : products);
+		// Paginate results
+		const skip = typeof request.query.skip !== "undefined" ? parseInt(request.query.skip) : 0;
+		const limit = typeof request.query.limit !== "undefined" ? parseInt(request.query.limit) : 0;
+		const offset = limit <= 0 ? products.length : skip + limit;
+		products = products.slice(skip, offset);
+		sendSuccessResponse(response, products);
 	} catch (error) {
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await closeConnection(connection);
-		}
+		await Product.close();
 	}
 }
 
 export async function getProduct(request: Request, response: Response) {
-	let connection;
+	const Product = getModel(ModelChoice.Product);
 	try {
-		connection = await initialiseConnection();
 		const requirements: RequestRequirements = {
-			query: ["id"],
+			query: ["_id"],
 		};
 		validateRequest(request, requirements);
-		const product = Product.aBillionDollarMistakeCheck(
-			await Product.fetchByID(connection, request.query.id),
-			request.query.id
-		);
+		await Product.initialise();
+		const product = await Product.fetchByID<IProduct>(request.query._id);
+		if (!product) {
+			throwError("Product with ID " + request.query._id + " is not found.", 404);
+		}
 		sendSuccessResponse(response, product);
 	} catch (error) {
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await closeConnection(connection);
-		}
+		await Product.close();
 	}
 }
 
 export async function createProduct(request: Request, response: Response) {
-	let connection;
+	const Category = getModel(ModelChoice.Category);
+	const Product = getModel(ModelChoice.Product);
 	try {
-		connection = await initialiseConnection();
-		await connection.beginTransaction();
 		const requirements: RequestRequirements = {
-			body: ["name", "description", "image", "price", "category_id"],
+			body: ["name"],
 		};
 		validateRequest(request, requirements);
-		const category = Category.aBillionDollarMistakeCheck(
-			await Category.fetchByID(connection, request.body.category_id),
-			request.body.category_id
-		);
+		const backbone = await Category.initialise();
+		await Product.initialise(backbone);
+		await Product.startTransaction();
+		const category = <ICategory> await Category.fetchByID<ICategory>(request.body.category_id);
+		if (!category) {
+			throwError("Category with ID " + request.body.category_id + " is not found.", 404);
+		}
 		let product: IProduct = {
-			id: UUID.generate(),
+			_id: UUID.generateShort(),
 			name: request.body.name,
 			description: request.body.description,
 			image: request.body.image,
-			price: parseInt(request.body.price),
-			category_id: category.id,
-			quantity: 0
+			price: request.body.price,
+			category_id: category._id,
+			stock: 0,
+			created_at: (new Date()).getTime(),
+			updated_at: null,
 		};
-		const { insertId } = await Product.create(connection, product);
-		product = Product.aBillionDollarMistakeCheck(
-			await Product.fetchByID(connection, insertId),
-			insertId
-		);
-		await connection.commit();
-		sendSuccessResponse(response, category, "Successfully created product " + product.name + ".");
+		product = <IProduct> await Product.create<IProduct>(product);
+		await Product.commit();
+		sendSuccessResponse(response, product, "Successfully created product " + product.name + ".");
 	} catch (error) {
+		await Product.rollback();
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await connection.rollback();
-			await closeConnection(connection);
-		}
+		await Product.close();
 	}
 }
 
 export async function modifyProduct(request: Request, response: Response) {
-	let connection;
+	const Category = getModel(ModelChoice.Category);
+	const Product = getModel(ModelChoice.Product);
 	try {
-		connection = await initialiseConnection();
 		const requirements: RequestRequirements = {
-			query: ["id"],
+			query: ["_id"],
 		};
 		validateRequest(request, requirements);
-		let product = Product.aBillionDollarMistakeCheck(
-			await Product.fetchByID(connection, request.query.id),
-			request.query.id
-		);
+		const backbone = await Category.initialise();
+		await Product.initialise(backbone);
+		await Product.startTransaction();
+		let product = <IProduct> await Product.fetchByID<IProduct>(request.query._id);
+		if (!product) {
+			throwError("Product with ID " + request.query._id + " is not found.", 404);
+		}
+		const category = <ICategory> await Product.fetchByID<ICategory>(request.body.category_id);
+		if (!category) {
+			throwError("Parameter \"category_id\" is invalid. Category with ID " + request.body.category_id + " is not found.", 404);
+		}
 		product.name = request.body.name || product.name;
 		product.description = request.body.description || product.description;
 		product.image = request.body.image || product.image;
 		product.price = request.body.price || product.price;
-		if (!!request.body.category_id) {
-			const category = Category.aBillionDollarMistakeCheck(
-				await Category.fetchByID(connection, request.body.category_id),
-				request.body.category_id
-			);
-			product.category_id = category.id;
-		}
-		await Product.modify(connection, product);
-		product = Product.aBillionDollarMistakeCheck(
-			await Product.fetchByID(connection, request.query.id),
-			request.query.id
-		);
-		await connection.commit();
+		product.category_id = category._id;
+		product.updated_at = (new Date()).getTime();
+		product = <IProduct> await Product.modifyByID(product, product._id);
+		await Product.commit();
 		sendSuccessResponse(response, product, "Successfully modified product " + product.name + ".");
 	} catch (error) {
+		await Product.rollback();
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await connection.rollback();
-			await closeConnection(connection);
-		}
+		await Product.close();
 	}
 }
 
 export async function deleteProduct(request: Request, response: Response) {
-	let connection;
+	const Product = getModel(ModelChoice.Product);
 	try {
-		connection = await initialiseConnection();
 		const requirements: RequestRequirements = {
-			query: ["id"]
+			query: ["_id"],
 		};
 		validateRequest(request, requirements);
-		const product = Product.aBillionDollarMistakeCheck(
-			await Product.fetchByID(connection, request.query.id),
-			request.query.id
-		);
-		await Product.deleteByID(connection, request.query.id);
-		await connection.commit();
-		sendSuccessResponse(response, "Successfully deleted product " + product.name + ".");
+		await Product.initialise();
+		await Product.startTransaction();
+		let product = <IProduct> await Product.fetchByID<IProduct>(request.query._id);
+		if (!product) {
+			throwError("Product with ID " + request.query._id + " is not found.", 404);
+		}
+		await Product.removeByID(product._id);
+		await Product.commit();
+		sendSuccessResponse(response, "Successfully deleted category " + product.name + ".");
 	} catch (error) {
+		await Product.rollback();
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await connection.rollback();
-			await closeConnection(connection);
-		}
+		await Product.close();
 	}
 }

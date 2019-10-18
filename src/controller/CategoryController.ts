@@ -16,140 +16,128 @@
 
 import { Request, Response } from "express-serve-static-core";
 
-import { initialiseConnection, closeConnection } from "../helpers/database";
-import { sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
+import { getModel } from "../helpers/database";
+import { RequestRequirements, sendSuccessResponse, throwError, validateRequest } from "../helpers/express";
 import { UUID } from "../helpers/uuid";
-import { Category } from "../model/Category";
-import { Product } from "../model/Product";
-import { ICategory } from "../interfaces/model/ICategory";
+import { ICategory } from "../model/ICategory";
+import { IProduct } from "../model/IProduct";
+import { ModelChoice } from "../model/factory/DatabaseFactory";
 
 export async function getCategories(request: Request, response: Response) {
-	let connection;
+	const Category = getModel(ModelChoice.Category);
 	try {
-		connection = await initialiseConnection();
-		const categories = await Category.fetch(connection);
+		await Category.initialise();
+		const categories = await Category.fetch<ICategory>();
 		sendSuccessResponse(response, categories);
 	} catch (error) {
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await closeConnection(connection);
-		}
+		await Category.close();
 	}
 }
 
 export async function getCategory(request: Request, response: Response) {
-	let connection;
+	const Category = getModel(ModelChoice.Category);
 	try {
-		connection = await initialiseConnection();
 		const requirements: RequestRequirements = {
-			query: ["id"],
+			query: ["_id"],
 		};
 		validateRequest(request, requirements);
-		const category = Category.aBillionDollarMistakeCheck(
-			await Category.fetchByID(connection, request.query.id),
-			request.query.id
-		);
+		await Category.initialise();
+		const category = await Category.fetchByID<ICategory>(request.query._id);
+		if (!category) {
+			throwError("Category with ID " + request.query._id + " is not found.", 404);
+		}
 		sendSuccessResponse(response, category);
 	} catch (error) {
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await closeConnection(connection);
-		}
+		await Category.close();
 	}
 }
 
 export async function createCategory(request: Request, response: Response) {
-	let connection;
+	const Category = getModel(ModelChoice.Category);
 	try {
-		connection = await initialiseConnection();
-		await connection.beginTransaction();
 		const requirements: RequestRequirements = {
 			body: ["name"],
 		};
 		validateRequest(request, requirements);
+		await Category.initialise();
+		await Category.startTransaction();
 		let category: ICategory = {
-			id: UUID.generate(),
+			_id: UUID.generateShort(),
 			name: request.body.name,
-			description: request.body.description || ""
+			description: request.body.description || "",
+			created_at: (new Date()).getTime(),
+			updated_at: null,
 		};
-		const { insertId } = await Category.create(connection, category);
-		category = Category.aBillionDollarMistakeCheck(
-			await Category.fetchByID(connection, insertId),
-			insertId
-		);
-		await connection.commit();
+		category = await Category.create<ICategory>(category);
+		await Category.commit();
 		sendSuccessResponse(response, category, "Successfully created category " + category.name + ".");
 	} catch (error) {
+		await Category.rollback();
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await connection.rollback();
-			await closeConnection(connection);
-		}
+		await Category.close();
 	}
 }
 
 export async function modifyCategory(request: Request, response: Response) {
-	let connection;
+	const Category = getModel(ModelChoice.Category);
 	try {
-		connection = await initialiseConnection();
 		const requirements: RequestRequirements = {
-			query: ["id"],
+			query: ["_id"],
 		};
 		validateRequest(request, requirements);
-		let category = Category.aBillionDollarMistakeCheck(
-			await Category.fetchByID(connection, request.query.id),
-			request.query.id
-		);
+		await Category.initialise();
+		await Category.startTransaction();
+		let category = <ICategory> await Category.fetchByID<ICategory>(request.query._id);
+		if (!category) {
+			throwError("Category with ID " + request.query._id + " is not found.", 404);
+		}
 		category.name = request.body.name || category.name;
 		category.description = request.body.description || category.description;
-		await Category.modify(connection, category);
-		category = Category.aBillionDollarMistakeCheck(
-			await Category.fetchByID(connection, request.query.id),
-			request.query.id
-		);
-		await connection.commit();
+		category.updated_at = (new Date()).getTime();
+		category = <ICategory> await Category.modifyByID<ICategory>(category, category._id);
+		await Category.commit();
 		sendSuccessResponse(response, category, "Successfully modified category " + category.name + ".");
 	} catch (error) {
+		await Category.rollback();
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await connection.rollback();
-			await closeConnection(connection);
-		}
+		await Category.close();
 	}
 }
 
 export async function deleteCategory(request: Request, response: Response) {
-	let connection;
+	const Category = getModel(ModelChoice.Category);
+	const Product = getModel(ModelChoice.Product);
 	try {
-		connection = await initialiseConnection();
 		const requirements: RequestRequirements = {
-			query: ["id"]
+			query: ["_id"],
 		};
 		validateRequest(request, requirements);
-		const category = Category.aBillionDollarMistakeCheck(
-			await Category.fetchByID(connection, request.query.id),
-			request.query.id
-		);
-		const products = await Product.fetch(connection, "condition_id = " + request.query.id);
-		if (products.length > 0) {
-			const counts = products.length === 1 ? "is 1 product" : "are " + products.length + " products";
-			const error = new Error("Failed to delete category " + category.name + ". Currently, there " + counts + " that defined under this category. Please delete them first.");
-			(<any>error).code = 400;
-			throw error;
+		const backbone = await Category.initialise();
+		await Product.initialise(backbone);
+		await Category.startTransaction();
+		let category = <ICategory> await Category.fetchByID<ICategory>(request.query._id);
+		if (!category) {
+			throwError("Category with ID " + request.query._id + " is not found.", 404);
 		}
-		await Category.deleteByID(connection, request.query.id);
-		await connection.commit();
+		const productsUnderThisCategory = await Product.fetch<IProduct>({ category_id: category._id });
+		if (productsUnderThisCategory.length > 0) {
+			const totalProduct = productsUnderThisCategory.length;
+			const counts = totalProduct === 1 ? "is 1 product" : "are " + totalProduct + " products";
+			throwError("Failed to delete category " + category.name + ". Currently, there " + counts + " that defined under this category. Please delete them first.", 400);
+		}
+		await Category.removeByID(category._id);
+		await Category.commit();
 		sendSuccessResponse(response, "Successfully deleted category " + category.name + ".");
 	} catch (error) {
+		await Category.rollback();
 		throw error;
 	} finally {
-		if (typeof connection !== "undefined") {
-			await connection.rollback();
-			await closeConnection(connection);
-		}
+		await Category.close();
 	}
 }

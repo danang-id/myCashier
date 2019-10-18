@@ -17,6 +17,6 @@
 import { notFound } from "../helpers/express";
 import { NextFunction, Request, Response } from "express-serve-static-core";
 
-export async function serve(request: Request, response: Response, next: NextFunction) {
+export function serve(request: Request, response: Response, next: NextFunction) {
 	notFound(request, response, next);
 }
