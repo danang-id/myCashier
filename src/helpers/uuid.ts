@@ -55,5 +55,3 @@ export class UUID {
 
 type ShortUUID = string;
 type RegularUUID = string;
-
-export default UUID;

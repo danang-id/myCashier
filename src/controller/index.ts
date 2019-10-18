@@ -17,7 +17,9 @@
 import { serve } from "./MainController";
 import { getCategories, getCategory, createCategory, modifyCategory, deleteCategory } from "./CategoryController";
 import { getProducts, getProduct, createProduct, modifyProduct, deleteProduct } from "./ProductController";
-import { addProductQuantity, reduceProductQuantity } from "./ProductQuantityController";
+import { addProductStock, reduceProductStock } from "./ProductStockController";
+import { getTransaction, createNewTransaction, addProductTransactionQuantity, reduceProductTransactionQuantity } from "./TransactionController";
+import { registerUser, signInUser } from "./AuthenticationController";
 import { RequestHandler } from "express-serve-static-core";
 
 export const Controllers: ControllersType = {
@@ -32,8 +34,14 @@ export const Controllers: ControllersType = {
 	createProduct,
 	modifyProduct,
 	deleteProduct,
-	addProductQuantity,
-	reduceProductQuantity,
+	addProductStock,
+	reduceProductStock,
+	getTransaction,
+	createNewTransaction,
+	addProductTransactionQuantity,
+	reduceProductTransactionQuantity,
+	registerUser,
+	signInUser
 };
 
 export default Controllers;

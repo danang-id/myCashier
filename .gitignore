@@ -3,6 +3,9 @@ node_modules
 lib
 **/*.DS_Store
 
+keys/*
+!keys/.gitkeep
+
 .env
 .env.local
 .env.development.local

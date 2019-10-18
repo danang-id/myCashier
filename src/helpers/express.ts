@@ -26,63 +26,63 @@ export function promisify(handler: RequestHandler) {
 	};
 }
 
+function validateAuthentication(request: Request, response: Response, next: NextFunction) {
+	if (!(<any>request).user) {
+		throwError("You are not authorised to access this resource.", 401);
+	}
+	next();
+}
+
 function addRoute(
 	app: Application,
 	method: string,
 	route: string,
-	isRequireHTTPS: boolean,
+	isProtectedRoute: boolean,
 	isAsyncHandler: boolean,
 	handler: RequestHandler
 ) {
 	const _handler = isAsyncHandler ? promisify(handler) : handler;
-	isRequireHTTPS ? (<any>app)[method](route, requireHTTPS, _handler) : (<any>app)[method](route, _handler);
+	isProtectedRoute ? (<any>app)[method](route, validateAuthentication, _handler) : (<any>app)[method](route, _handler);
 }
 
 export function createRouter(app: Application): IRouter {
 	return {
-		get(route: string, isRequireHTTPS: boolean = false) {
+		get(route: string, isProtectedRoute: boolean = false) {
 			return {
 				handle(handler: RequestHandler, isAsyncHandler: boolean = true) {
-					addRoute(app, HTTP_METHOD.GET, route, isRequireHTTPS, isAsyncHandler, handler);
+					addRoute(app, HTTP_METHOD.GET, route, isProtectedRoute, isAsyncHandler, handler);
 				},
 			};
 		},
-		post(route: string, isRequireHTTPS: boolean = false) {
+		post(route: string, isProtectedRoute: boolean = false) {
 			return {
 				handle(handler: RequestHandler, isAsyncHandler: boolean = true) {
-					addRoute(app, HTTP_METHOD.POST, route, isRequireHTTPS, isAsyncHandler, handler);
+					addRoute(app, HTTP_METHOD.POST, route, isProtectedRoute, isAsyncHandler, handler);
 				},
 			};
 		},
-		put(route: string, isRequireHTTPS: boolean = false) {
+		put(route: string, isProtectedRoute: boolean = false) {
 			return {
 				handle(handler: RequestHandler, isAsyncHandler: boolean = true) {
-					addRoute(app, HTTP_METHOD.PUT, route, isRequireHTTPS, isAsyncHandler, handler);
+					addRoute(app, HTTP_METHOD.PUT, route, isProtectedRoute, isAsyncHandler, handler);
 				},
 			};
 		},
-		patch(route: string, isRequireHTTPS: boolean = false) {
+		patch(route: string, isProtectedRoute: boolean = false) {
 			return {
 				handle(handler: RequestHandler, isAsyncHandler: boolean = true) {
-					addRoute(app, HTTP_METHOD.PATCH, route, isRequireHTTPS, isAsyncHandler, handler);
+					addRoute(app, HTTP_METHOD.PATCH, route, isProtectedRoute, isAsyncHandler, handler);
 				},
 			};
 		},
-		delete(route: string, isRequireHTTPS: boolean = false) {
+		delete(route: string, isProtectedRoute: boolean = false) {
 			return {
 				handle(handler: RequestHandler, isAsyncHandler: boolean = true) {
-					addRoute(app, HTTP_METHOD.DELETE, route, isRequireHTTPS, isAsyncHandler, handler);
+					addRoute(app, HTTP_METHOD.DELETE, route, isProtectedRoute, isAsyncHandler, handler);
 				},
 			};
 		},
 	};
-}
-
-export function requireHTTPS(request: Request, response: Response, next: NextFunction) {
-	const schema = (<string>request.headers["x-forwarded-proto"] || "").toLowerCase();
-	request.headers.host && request.headers.host.indexOf("localhost") < 0 && schema !== "https"
-		? response.redirect("https://" + request.headers.host + request.originalUrl)
-		: next();
 }
 
 export function notFound(request: Request, response: Response, next: NextFunction) {
@@ -92,6 +92,7 @@ export function notFound(request: Request, response: Response, next: NextFunctio
 }
 
 export function createErrorHandler(logger: ILogger) {
+	logger.i("Added customised error handler middleware.");
 	return function(error: Error, request: Request, response: Response) {
 		(<any>error).code = (<any>error).code || 500;
 		if (!error.message || error.message === "") {
@@ -130,18 +131,26 @@ export function showLog(logger: ILogger) {
 }
 
 export function validateRequest(request: Request, requirements: RequestRequirements) {
-	for (const requestElement in requirements) {
-		if (requirements.hasOwnProperty(requestElement)) {
-			const fields = (<any>requirements)[requestElement];
-			for (const field of fields) {
-				if (!(<any>request)[requestElement][field]) {
-					const error = new Error('Parameter "' + field + '" is required.');
-					(<any>error).code = 400;
-					throw error;
+	try {
+		for (const requestElement in requirements) {
+			if (requirements.hasOwnProperty(requestElement)) {
+				const fields = (<any>requirements)[requestElement];
+				for (const field of fields) {
+					if (!(<any>request)[requestElement][field]) {
+						throwError('Parameter "' + field + '" is required.', 400);
+					}
 				}
 			}
 		}
+	} catch (error) {
+		throw error;
 	}
+}
+
+export function throwError(message: string, code: number) {
+	const error = new Error(message);
+	(<any>error).code = code;
+	throw error;
 }
 
 export function sendSuccessResponse(response: Response, ...args: any[]) {

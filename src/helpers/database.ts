@@ -1,7 +1,4 @@
 /**
- * This program was written and submitted for Bootcamp Arkademy
- * Batch 12 selection.
- *
  * Copyright 2019, Danang Galuh Tegar Prasetyo.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +13,14 @@
  * limitations under the License.
  */
 
-import mysql from "promise-mysql";
+import { DatabaseConfig } from "../config/database.config";
+import { DatabaseFactory, FactoryChoice, ModelChoice } from "../model/factory/DatabaseFactory";
 
-export async function initialiseConnection(): Promise<mysql.Connection> {
+export function getModel(modelChoice: ModelChoice) {
 	try {
-		return await mysql.createConnection({
-			host     : 'localhost',
-			user     : 'me',
-			password : 'secret',
-			database : 'my_db'
-		});
+		const factoryChoice: FactoryChoice = <FactoryChoice> <unknown> DatabaseConfig.type.toLowerCase();
+		return DatabaseFactory.getModel(factoryChoice, modelChoice);
 	} catch (error) {
 		throw error;
 	}
 }
-
-export async function closeConnection(connection: mysql.Connection) {
-	try {
-		await connection.end();
-	} catch (error) {
-		throw error;
-	}
-}
-
