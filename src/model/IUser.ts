@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-export interface IProduct {
-	id: string;
-	name: string;
-	description: string;
-	image: string;
-	price: number;
-	category_id: string;
-	quantity: number;
-	created_at?: Date;
-	updated_at?: Date | null;
+export interface IUser {
+	_id: string;
+	given_name: string;
+	maiden_name: string;
+	email_address: string;
+	password: string;
+	created_at: number;
+	updated_at: number | null;
 }
