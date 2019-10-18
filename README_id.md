@@ -1,6 +1,11 @@
+<p align="center">
+  <a href="https://www.arkademy.com/" target="blank"><img src="https://www.arkademy.com/img/logo%20arkademy-01.9c1222ba.png" width="300" alt="Arkademy" /></a>
+  
 # Point of Sales
 
 [English](README.md)| **Bahasa Indonesia**
+
+</p>
 
 **_Point of Sales_** adalah program yang ditulis untuk Tugas Pekan 1 Bootcamp Arkademy Batch 12 Faztrack: Point of Sales Back-End.
 
