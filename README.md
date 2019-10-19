@@ -13,7 +13,7 @@
 ## List of Contents
 
 * [Point of Sales](#point-of-sales)
-  * [List of Contents](#list-of-contents)
+  * [List of Contents](#list-of-contents)   
   * [System Requirement](#system-requirements)
   * [Getting Started](#getting-started)
   * [Documentation](#documentation)

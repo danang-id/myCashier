@@ -16,6 +16,7 @@
 import fs from "fs";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import clone from "lodash.clone";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
@@ -32,6 +33,12 @@ export async function registerUser(request: Request, response: Response) {
 			body: ["given_name", "maiden_name", "email_address", "password"],
 		};
 		validateRequest(request, requirements);
+		const emailRegExp = new RegExp(/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+		if (!emailRegExp.test(request.body.email_address.trim())) {
+			return sendErrorResponse(request, response,
+				craftError("Registration failed. Email address " + request.body.email_address + " is not a valid email address.", 400)
+			);
+		}
 		await User.initialise();
 		await User.startTransaction();
 		const shortUUID = UUID.generateShort();

@@ -95,8 +95,7 @@ export class Model implements IModel {
 			throw new Error("Connection has not been initialised.")
 		}
 		try {
-			console.log(this.modelName, _id);
-			return <T> await this.backbone.collection.findByID(_id);
+			return <T> await this.backbone.collection.findByID(_id.trim());
 		} catch (error) {
 			throw error;
 		}

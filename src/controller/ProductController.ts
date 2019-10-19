@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import clone from "lodash.clone";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
@@ -33,6 +34,11 @@ export async function getProducts(request: Request, response: Response) {
 				return product.name.toLowerCase().includes(request.query.query.toLowerCase());
 			});
 		}
+		// Paginate results
+		const skip = typeof request.query.skip !== "undefined" ? parseInt(request.query.skip) : 0;
+		const limit = typeof request.query.limit !== "undefined" ? parseInt(request.query.limit) : 0;
+		const offset = limit <= 0 ? products.length : skip + limit;
+		products = products.slice(skip, offset);
 		// Sort search results
 		if (!!request.query.sort_by && (
 			request.query.sort_by === 'name' ||
@@ -46,11 +52,6 @@ export async function getProducts(request: Request, response: Response) {
 			}
 			products = products.sort(compare);
 		}
-		// Paginate results
-		const skip = typeof request.query.skip !== "undefined" ? parseInt(request.query.skip) : 0;
-		const limit = typeof request.query.limit !== "undefined" ? parseInt(request.query.limit) : 0;
-		const offset = limit <= 0 ? products.length : skip + limit;
-		products = products.slice(skip, offset);
 		sendSuccessResponse(response, products);
 	} catch (error) {
 		return sendErrorResponse(request, response, error);
@@ -90,10 +91,10 @@ export async function createProduct(request: Request, response: Response) {
 		};
 		validateRequest(request, requirements);
 		const backbone = await Category.initialise();
-		await Product.initialise(backbone);
+		await Product.initialise(clone(backbone));;
 		await Product.startTransaction();
-		const categories = <ICategory[]> await Category.fetch<ICategory>({ _id: request.body.category_id });
-		if (categories.length < 0) {
+		const category = <ICategory> await Category.fetchByID<ICategory>(request.body.category_id);
+		if (!category) {
 			return sendErrorResponse(request, response,
 				craftError("Category with ID " + request.body.category_id + " is not found.", 404)
 			);
@@ -129,7 +130,7 @@ export async function modifyProduct(request: Request, response: Response) {
 		};
 		validateRequest(request, requirements);
 		const backbone = await Category.initialise();
-		await Product.initialise(backbone);
+		await Product.initialise(clone(backbone));;
 		await Product.startTransaction();
 		let product = <IProduct> await Product.fetchByID<IProduct>(request.query._id);
 		if (!product) {
@@ -137,8 +138,8 @@ export async function modifyProduct(request: Request, response: Response) {
 				craftError("Product with ID " + request.query._id + " is not found.", 404)
 			);
 		}
-		const categories = <ICategory[]> await Product.fetch<ICategory>({ _id: request.body.category_id });
-		if (categories.length === 0) {
+		const category = <ICategory> await Category.fetchByID<ICategory>(request.body.category_id || product.category_id);
+		if (!category) {
 			return sendErrorResponse(request, response,
 				craftError("Parameter \"category_id\" is invalid. Category with ID " + request.body.category_id + " is not found.", 404)
 			);
@@ -147,7 +148,7 @@ export async function modifyProduct(request: Request, response: Response) {
 		product.description = request.body.description || product.description;
 		product.image = request.body.image || product.image;
 		product.price = request.body.price || product.price;
-		product.category_id = request.body.category_id;
+		product.category_id = category._id;
 		product.updated_at = (new Date()).getTime();
 		product = <IProduct> await Product.modifyByID(product, product._id);
 		await Product.commit();
@@ -177,7 +178,7 @@ export async function deleteProduct(request: Request, response: Response) {
 		}
 		await Product.removeByID(product._id);
 		await Product.commit();
-		sendSuccessResponse(response, "Successfully deleted category " + product.name + ".");
+		sendSuccessResponse(response, "Successfully deleted product " + product.name + ".");
 	} catch (error) {
 		await Product.rollback();
 		return sendErrorResponse(request, response, error);

@@ -184,19 +184,20 @@ export function sendSuccessResponse(response: Response, ...args: any[]) {
 	const obj: {
 		success: boolean
 		code: number
+		user_id: string
 		message?: string
 		data?: any
-		user_id?: string
-	} = { success: true, code: 200 };
+	} = {
+		success: true,
+		code: 200,
+		user_id: !!(<any>response).user ? (<any>response).user._id : null
+	};
 	for (const arg of args) {
 		if (isString(arg)) {
 			obj.message = arg;
 		} else {
 			obj.data = !!obj.data ? obj.data : arg;
 		}
-	}
-	if (!!(<any>response).user) {
-		obj.user_id = (<any>response).user._id;
 	}
 	response.json(obj);
 }

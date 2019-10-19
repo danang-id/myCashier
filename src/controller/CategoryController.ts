@@ -14,6 +14,7 @@
  */
 
 
+import clone from "lodash.clone";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
@@ -123,7 +124,7 @@ export async function deleteCategory(request: Request, response: Response) {
 		};
 		validateRequest(request, requirements);
 		const backbone = await Category.initialise();
-		await Product.initialise(backbone);
+		await Product.initialise(clone(backbone));;
 		await Category.startTransaction();
 		let category = <ICategory> await Category.fetchByID<ICategory>(request.query._id);
 		if (!category) {
