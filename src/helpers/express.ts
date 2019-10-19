@@ -65,7 +65,7 @@ function addRoute(
 	handler: RequestHandler
 ) {
 	const _handler = isAsyncHandler ? promisify(handler) : handler;
-	isProtectedRoute ? (<any>app)[method](route, validateAuthentication, _handler) : (<any>app)[method](route, _handler);
+	isProtectedRoute && JWTConfig.isActive ? (<any>app)[method](route, validateAuthentication, _handler) : (<any>app)[method](route, _handler);
 }
 
 export function createRouter(app: Application): IRouter {
