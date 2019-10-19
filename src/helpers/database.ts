@@ -18,7 +18,7 @@ import { DatabaseFactory, FactoryChoice, ModelChoice } from "../model/factory/Da
 
 export function getModel(modelChoice: ModelChoice) {
 	try {
-		const factoryChoice: FactoryChoice = <FactoryChoice> <unknown> DatabaseConfig.type.toLowerCase();
+		const factoryChoice: FactoryChoice = <FactoryChoice>(<unknown>DatabaseConfig.type.toLowerCase());
 		return DatabaseFactory.getModel(factoryChoice, modelChoice);
 	} catch (error) {
 		throw error;

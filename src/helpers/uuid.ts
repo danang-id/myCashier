@@ -1,5 +1,5 @@
-import UUIDv1 from 'uuid/v1';
-import SUUID from 'short-uuid';
+import UUIDv1 from "uuid/v1";
+import SUUID from "short-uuid";
 
 export class UUID {
 	private static get translator() {
@@ -24,9 +24,9 @@ export class UUID {
 
 	public static transformIdentifierToRegular(object: { [key: string]: any }): any {
 		for (const key in object) {
-			if (object.hasOwnProperty(key) && key.substring(key.length - 3) === '_id') {
+			if (object.hasOwnProperty(key) && key.substring(key.length - 3) === "_id") {
 				try {
-					if (key !== 'old_id') {
+					if (key !== "old_id") {
 						object[key] = UUID.shortToRegular(object[key]);
 					}
 				} catch (error) {
@@ -39,9 +39,9 @@ export class UUID {
 
 	public static transformIdentifierToShort(object: { [key: string]: any }): any {
 		for (const key in object) {
-			if (object.hasOwnProperty(key) && key.substring(key.length - 3) === '_id') {
+			if (object.hasOwnProperty(key) && key.substring(key.length - 3) === "_id") {
 				try {
-					if (key !== 'old_id') {
+					if (key !== "old_id") {
 						object[key] = UUID.regularToShort(object[key]);
 					}
 				} catch (error) {

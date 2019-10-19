@@ -20,7 +20,13 @@ import clone from "lodash.clone";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
+import {
+	craftError,
+	sendErrorResponse,
+	sendSuccessResponse,
+	validateRequest,
+	RequestRequirements,
+} from "../helpers/express";
 import { IUser } from "../model/IUser";
 import { ModelChoice } from "../model/factory/DatabaseFactory";
 import { UUID } from "../helpers/uuid";
@@ -33,19 +39,35 @@ export async function registerUser(request: Request, response: Response) {
 			body: ["given_name", "maiden_name", "email_address", "password"],
 		};
 		validateRequest(request, requirements);
-		const emailRegExp = new RegExp(/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+		const emailRegExp = new RegExp(
+			/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		);
 		if (!emailRegExp.test(request.body.email_address.trim())) {
-			return sendErrorResponse(request, response,
-				craftError("Registration failed. Email address " + request.body.email_address + " is not a valid email address.", 400)
+			return sendErrorResponse(
+				request,
+				response,
+				craftError(
+					"Registration failed. Email address " +
+						request.body.email_address +
+						" is not a valid email address.",
+					400
+				)
 			);
 		}
 		await User.initialise();
 		await User.startTransaction();
 		const shortUUID = UUID.generateShort();
-		let user = <IUser> await User.fetchOne<IUser>({ email_address:request.body.email_address });
+		let user = <IUser>await User.fetchOne<IUser>({ email_address: request.body.email_address });
 		if (!!user) {
-			return sendErrorResponse(request, response,
-				craftError("Registration failed. Email address " + request.body.email_address + " has already been registered.", 400)
+			return sendErrorResponse(
+				request,
+				response,
+				craftError(
+					"Registration failed. Email address " +
+						request.body.email_address +
+						" has already been registered.",
+					400
+				)
 			);
 		}
 		user = {
@@ -54,10 +76,10 @@ export async function registerUser(request: Request, response: Response) {
 			maiden_name: request.body.maiden_name,
 			email_address: request.body.email_address,
 			password: bcrypt.hashSync(request.body.password, 10),
-			created_at: (new Date()).getTime(),
-			updated_at: null
+			created_at: new Date().getTime(),
+			updated_at: null,
 		};
-		user = <IUser> await User.create<IUser>(user);
+		user = <IUser>await User.create<IUser>(user);
 		await User.commit();
 		sendSuccessResponse(response, "Successfully registered " + user.given_name + " " + user.maiden_name + ".");
 	} catch (error) {
@@ -77,14 +99,18 @@ export async function signInUser(request: Request, response: Response) {
 		validateRequest(request, requirements);
 		await User.initialise();
 		await User.startTransaction();
-		const user = <IUser> await User.fetchOne<IUser>({ email_address: request.body.email_address });
+		const user = <IUser>await User.fetchOne<IUser>({ email_address: request.body.email_address });
 		if (!user) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Sign in failed! Please check your email address or password.", 400)
 			);
 		}
 		if (!bcrypt.compareSync(request.body.password, user.password)) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Sign in failed! Please check your email address or password.", 400)
 			);
 		}
@@ -92,7 +118,7 @@ export async function signInUser(request: Request, response: Response) {
 		// const privateKey = fs.readFileSync(JWTConfig.privateKeyPath);
 		const token = jwt.sign(signedUser, JWTConfig.secretKey);
 		await User.commit();
-		sendSuccessResponse(response, { token  });
+		sendSuccessResponse(response, { token });
 	} catch (error) {
 		await User.rollback();
 		return sendErrorResponse(request, response, error);
@@ -101,4 +127,4 @@ export async function signInUser(request: Request, response: Response) {
 	}
 }
 
-export interface ISignedUser extends Omit<IUser, 'password'> {}
+export interface ISignedUser extends Omit<IUser, "password"> {}

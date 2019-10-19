@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 export const DatabaseConfig = {
-	type: process.env.DB_TYPE || 'mysqlx',
-	host: process.env.DB_HOST || 'localhost',
+	type: process.env.DB_TYPE || "mysqlx",
+	host: process.env.DB_HOST || "localhost",
 	port: parseInt(process.env.DB_PORT || ((<any>this).type === "mysqlx" ? "33060" : "3306")),
-	schema: process.env.DB_NAME || 'bcaf12-point-of-sales',
-	user: process.env.DB_USERNAME || 'root',
+	schema: process.env.DB_NAME || "bcaf12-point-of-sales",
+	user: process.env.DB_USERNAME || "root",
 	password: process.env.DB_PASSWORD,
 	poolingOptions: {
 		pooling: {
 			enabled: true,
 			maxSize: 3,
 		},
-	}
-}
+	},
+};

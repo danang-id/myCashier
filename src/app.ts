@@ -14,7 +14,6 @@
  */
 
 import "@babel/polyfill";
-import fs from "fs";
 import http from "http";
 import express from "express";
 import cors from "cors";
@@ -34,19 +33,6 @@ const server = new http.Server(app);
 const port = process.env.PORT || 9000;
 const unprotectedEndpoints: string[] = [];
 const errorHandler = createErrorHandler(logger);
-/**
- * White-list temporarily disabled
-const corsWhiteList = ["http://localhost:" + port];
-const corsOptions: CorsOptions = {
-	origin: function (origin: any, callback: any) {
-		if (corsWhiteList.indexOf(origin) !== -1 || !origin) {
-			callback(null, true);
-		} else {
-			callback(new Error("Not allowed by CORS"));
-		}
-	}
-};
- **/
 
 app.use(helmet());
 app.use(json());

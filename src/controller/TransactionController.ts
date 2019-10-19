@@ -13,12 +13,17 @@
  * limitations under the License.
  */
 
-
 import clone from "lodash.clone";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
+import {
+	craftError,
+	sendErrorResponse,
+	sendSuccessResponse,
+	validateRequest,
+	RequestRequirements,
+} from "../helpers/express";
 import { IProduct } from "../model/IProduct";
 import { IProductTransaction } from "../model/IProductTransaction";
 import { ITransaction } from "../model/ITransaction";
@@ -31,30 +36,30 @@ export async function getTransaction(request: Request, response: Response) {
 	const Transaction = getModel(ModelChoice.Transaction);
 	try {
 		const requirements: RequestRequirements = {
-			query: ["_id"]
+			query: ["_id"],
 		};
 		validateRequest(request, requirements);
 		const backbone = await Product.initialise();
-		await ProductTransaction.initialise(clone(backbone));;
-		await Transaction.initialise(clone(backbone));;
-		const transaction = <ITransaction> await Transaction.fetchByID<ITransaction>(request.query._id);
+		await ProductTransaction.initialise(clone(backbone));
+		await Transaction.initialise(clone(backbone));
+		const transaction = <ITransaction>await Transaction.fetchByID<ITransaction>(request.query._id);
 		if (!transaction) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Transaction with ID " + request.query._id + " is not found.", 404)
 			);
 		}
 		const responseObject: any = transaction;
-		const productTransactions = <IProductTransaction[]> await ProductTransaction.fetch();
-		const productTransaction = productTransactions.find(
-			pt => pt.transaction_id === transaction._id
-		);
+		const productTransactions = <IProductTransaction[]>await ProductTransaction.fetch();
+		const productTransaction = productTransactions.find((pt) => pt.transaction_id === transaction._id);
 		responseObject.products = [];
 		for (const productTransaction of productTransactions) {
 			const quantity = productTransaction.quantity;
-			const product = <IProduct> await Product.fetchByID<IProduct>(productTransaction.product_id);
+			const product = <IProduct>await Product.fetchByID<IProduct>(productTransaction.product_id);
 			responseObject.products.push({
 				...product,
-				quantity
+				quantity,
 			});
 		}
 		sendSuccessResponse(response, responseObject);
@@ -73,9 +78,9 @@ export async function createNewTransaction(request: Request, response: Response)
 		let transaction: ITransaction = {
 			_id: UUID.generateShort(),
 			user_id: (<any>request).user._id,
-			created_at: (new Date()).getTime()
+			created_at: new Date().getTime(),
 		};
-		transaction = <ITransaction> await Transaction.create<ITransaction>(transaction);
+		transaction = <ITransaction>await Transaction.create<ITransaction>(transaction);
 		await Transaction.commit();
 		sendSuccessResponse(response, transaction, "Successfully created new transaction.");
 	} catch (error) {
@@ -96,27 +101,31 @@ export async function addProductTransactionQuantity(request: Request, response: 
 		};
 		validateRequest(request, requirements);
 		const backbone = await Product.initialise();
-		await ProductTransaction.initialise(clone(backbone));;
-		await Transaction.initialise(clone(backbone));;
+		await ProductTransaction.initialise(clone(backbone));
+		await Transaction.initialise(clone(backbone));
 		await Transaction.startTransaction();
-		let product = <IProduct> await Product.fetchByID<IProduct>(request.body.product_id);
+		let product = <IProduct>await Product.fetchByID<IProduct>(request.body.product_id);
 		if (!product) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Product with ID " + request.body.product_id + " is not found.", 404)
 			);
 		}
-		const transaction = <ITransaction> await Transaction.fetchByID<ITransaction>(request.body.transaction_id);
+		const transaction = <ITransaction>await Transaction.fetchByID<ITransaction>(request.body.transaction_id);
 		if (!transaction) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Transaction with ID " + request.body.transaction_id + " is not found.", 404)
 			);
 		}
 		request.body.value = parseInt(request.body.value);
 		if (request.body.value <= 0) {
-			return sendErrorResponse(request, response,
-				craftError(
-				"Parameter \"value\" should be a positive integer. Given: " + request.body.value + ".",
-				400)
+			return sendErrorResponse(
+				request,
+				response,
+				craftError('Parameter "value" should be a positive integer. Given: ' + request.body.value + ".", 400)
 			);
 		}
 		let outOfStock = false;
@@ -124,28 +133,28 @@ export async function addProductTransactionQuantity(request: Request, response: 
 			outOfStock = true;
 			request.body.value = product.stock;
 		}
-		const productTransactions = <IProductTransaction[]> await ProductTransaction.fetch();
+		const productTransactions = <IProductTransaction[]>await ProductTransaction.fetch();
 		let productTransaction = productTransactions.find(
-			pt => pt.product_id === product._id && pt.transaction_id === transaction._id
+			(pt) => pt.product_id === product._id && pt.transaction_id === transaction._id
 		);
 		if (!productTransaction) {
-			productTransaction = <IProductTransaction> await ProductTransaction.create<IProductTransaction>({
+			productTransaction = <IProductTransaction>await ProductTransaction.create<IProductTransaction>({
 				_id: UUID.generateShort(),
 				product_id: product._id,
 				transaction_id: transaction._id,
 				quantity: 0,
-				created_at: (new Date()).getTime(),
-				updated_at: null
+				created_at: new Date().getTime(),
+				updated_at: null,
 			});
 		} else {
-			productTransaction.updated_at = (new Date()).getTime();
+			productTransaction.updated_at = new Date().getTime();
 		}
 		productTransaction.quantity = productTransaction.quantity + request.body.value;
 		product.stock = product.stock - request.body.value;
-		productTransaction = <IProductTransaction> await ProductTransaction.modifyByID<IProductTransaction>(
-			productTransaction, productTransaction._id
+		productTransaction = <IProductTransaction>(
+			await ProductTransaction.modifyByID<IProductTransaction>(productTransaction, productTransaction._id)
 		);
-		product = <IProduct> await Product.modifyByID<IProduct>(product, product._id);
+		product = <IProduct>await Product.modifyByID<IProduct>(product, product._id);
 		await Transaction.commit();
 		const message = outOfStock
 			? "Product " + product.name + " is out of stock."
@@ -169,56 +178,64 @@ export async function reduceProductTransactionQuantity(request: Request, respons
 		};
 		validateRequest(request, requirements);
 		const backbone = await Product.initialise();
-		await ProductTransaction.initialise(clone(backbone));;
-		await Transaction.initialise(clone(backbone));;
+		await ProductTransaction.initialise(clone(backbone));
+		await Transaction.initialise(clone(backbone));
 		await Transaction.startTransaction();
-		let product = <IProduct> await Product.fetchByID<IProduct>(request.body.product_id);
+		let product = <IProduct>await Product.fetchByID<IProduct>(request.body.product_id);
 		if (!product) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Product with ID " + request.body.product_id + " is not found.", 404)
 			);
 		}
-		const transaction = <ITransaction> await Transaction.fetchByID<ITransaction>(request.body.transaction_id);
+		const transaction = <ITransaction>await Transaction.fetchByID<ITransaction>(request.body.transaction_id);
 		if (!transaction) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Transaction with ID " + request.body.transaction_id + " is not found.", 404)
 			);
 		}
 		request.body.value = parseInt(request.body.value);
 		if (request.body.value <= 0) {
-			return sendErrorResponse(request, response,
-				craftError(
-				"Parameter \"value\" should be a positive integer. Given: " + request.body.value + ".",
-				400)
+			return sendErrorResponse(
+				request,
+				response,
+				craftError('Parameter "value" should be a positive integer. Given: ' + request.body.value + ".", 400)
 			);
 		}
-		const productTransactions = <IProductTransaction[]> await ProductTransaction.fetch();
+		const productTransactions = <IProductTransaction[]>await ProductTransaction.fetch();
 		let productTransaction = productTransactions.find(
-			pt => pt.product_id === product._id && pt.transaction_id === transaction._id
+			(pt) => pt.product_id === product._id && pt.transaction_id === transaction._id
 		);
 		if (!productTransaction) {
-			productTransaction = <IProductTransaction> await ProductTransaction.create<IProductTransaction>({
+			productTransaction = <IProductTransaction>await ProductTransaction.create<IProductTransaction>({
 				_id: UUID.generateShort(),
 				product_id: product._id,
 				transaction_id: transaction._id,
 				quantity: 0,
-				created_at: (new Date()).getTime(),
-				updated_at: null
+				created_at: new Date().getTime(),
+				updated_at: null,
 			});
 		} else {
-			productTransaction.updated_at = (new Date()).getTime();
+			productTransaction.updated_at = new Date().getTime();
 		}
 		if (request.body.value > productTransaction.quantity) {
 			request.body.value = productTransaction.quantity;
 		}
 		productTransaction.quantity = productTransaction.quantity - request.body.value;
 		product.stock = product.stock + request.body.value;
-		productTransaction = <IProductTransaction> await ProductTransaction.modifyByID<IProductTransaction>(
-			productTransaction, productTransaction._id
+		productTransaction = <IProductTransaction>(
+			await ProductTransaction.modifyByID<IProductTransaction>(productTransaction, productTransaction._id)
 		);
-		product = <IProduct> await Product.modifyByID<IProduct>(product, product._id);
+		product = <IProduct>await Product.modifyByID<IProduct>(product, product._id);
 		await Transaction.commit();
-		sendSuccessResponse(response, productTransaction, "Successfully reduced " + request.body.value + " quantity of " + product.name + ".");
+		sendSuccessResponse(
+			response,
+			productTransaction,
+			"Successfully reduced " + request.body.value + " quantity of " + product.name + "."
+		);
 	} catch (error) {
 		await Transaction.rollback();
 		return sendErrorResponse(request, response, error);

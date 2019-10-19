@@ -13,12 +13,17 @@
  * limitations under the License.
  */
 
-
 import clone from "lodash.clone";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
+import {
+	craftError,
+	sendErrorResponse,
+	sendSuccessResponse,
+	validateRequest,
+	RequestRequirements,
+} from "../helpers/express";
 import { UUID } from "../helpers/uuid";
 import { ICategory } from "../model/ICategory";
 import { IProduct } from "../model/IProduct";
@@ -47,7 +52,9 @@ export async function getCategory(request: Request, response: Response) {
 		await Category.initialise();
 		const category = await Category.fetchByID<ICategory>(request.query._id);
 		if (!category) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Category with ID " + request.query._id + " is not found.", 404)
 			);
 		}
@@ -72,7 +79,7 @@ export async function createCategory(request: Request, response: Response) {
 			_id: UUID.generateShort(),
 			name: request.body.name,
 			description: request.body.description || "",
-			created_at: (new Date()).getTime(),
+			created_at: new Date().getTime(),
 			updated_at: null,
 		};
 		category = await Category.create<ICategory>(category);
@@ -95,16 +102,18 @@ export async function modifyCategory(request: Request, response: Response) {
 		validateRequest(request, requirements);
 		await Category.initialise();
 		await Category.startTransaction();
-		let category = <ICategory> await Category.fetchByID<ICategory>(request.query._id);
+		let category = <ICategory>await Category.fetchByID<ICategory>(request.query._id);
 		if (!category) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Category with ID " + request.query._id + " is not found.", 404)
 			);
 		}
 		category.name = request.body.name || category.name;
 		category.description = request.body.description || category.description;
-		category.updated_at = (new Date()).getTime();
-		category = <ICategory> await Category.modifyByID<ICategory>(category, category._id);
+		category.updated_at = new Date().getTime();
+		category = <ICategory>await Category.modifyByID<ICategory>(category, category._id);
 		await Category.commit();
 		sendSuccessResponse(response, category, "Successfully modified category " + category.name + ".");
 	} catch (error) {
@@ -124,11 +133,13 @@ export async function deleteCategory(request: Request, response: Response) {
 		};
 		validateRequest(request, requirements);
 		const backbone = await Category.initialise();
-		await Product.initialise(clone(backbone));;
+		await Product.initialise(clone(backbone));
 		await Category.startTransaction();
-		let category = <ICategory> await Category.fetchByID<ICategory>(request.query._id);
+		let category = <ICategory>await Category.fetchByID<ICategory>(request.query._id);
 		if (!category) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Category with ID " + request.query._id + " is not found.", 404)
 			);
 		}
@@ -136,8 +147,17 @@ export async function deleteCategory(request: Request, response: Response) {
 		if (productsUnderThisCategory.length > 0) {
 			const totalProduct = productsUnderThisCategory.length;
 			const counts = totalProduct === 1 ? "is 1 product" : "are " + totalProduct + " products";
-			return sendErrorResponse(request, response,
-				craftError("Failed to delete category " + category.name + ". Currently, there " + counts + " that defined under this category. Please delete them first.", 400)
+			return sendErrorResponse(
+				request,
+				response,
+				craftError(
+					"Failed to delete category " +
+						category.name +
+						". Currently, there " +
+						counts +
+						" that defined under this category. Please delete them first.",
+					400
+				)
 			);
 		}
 		await Category.removeByID(category._id);

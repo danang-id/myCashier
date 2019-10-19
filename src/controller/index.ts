@@ -13,12 +13,16 @@
  * limitations under the License.
  */
 
-
 import { serve } from "./MainController";
 import { getCategories, getCategory, createCategory, modifyCategory, deleteCategory } from "./CategoryController";
 import { getProducts, getProduct, createProduct, modifyProduct, deleteProduct } from "./ProductController";
 import { addProductStock, reduceProductStock } from "./ProductStockController";
-import { getTransaction, createNewTransaction, addProductTransactionQuantity, reduceProductTransactionQuantity } from "./TransactionController";
+import {
+	getTransaction,
+	createNewTransaction,
+	addProductTransactionQuantity,
+	reduceProductTransactionQuantity,
+} from "./TransactionController";
 import { registerUser, signInUser } from "./AuthenticationController";
 import { RequestHandler } from "express-serve-static-core";
 
@@ -41,7 +45,7 @@ export const Controllers: ControllersType = {
 	addProductTransactionQuantity,
 	reduceProductTransactionQuantity,
 	registerUser,
-	signInUser
+	signInUser,
 };
 
 export default Controllers;

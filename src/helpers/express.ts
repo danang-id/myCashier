@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import fs from "fs";
 import jwt from "jsonwebtoken";
 import morgan from "morgan";
 import isString from "lodash.isstring";
@@ -32,8 +31,8 @@ export function promisify(handler: RequestHandler) {
 
 function verifyToken(request: Request, response: Response) {
 	// const publicKey = fs.readFileSync(JWTConfig.publicKeyPath);
-	let token: string = <string>request.headers['x-access-token'] || request.headers['authorization'] || "";
-	if ((<string>token).startsWith('Bearer ')) {
+	let token: string = <string>request.headers["x-access-token"] || request.headers["authorization"] || "";
+	if ((<string>token).startsWith("Bearer ")) {
 		// Remove Bearer from string
 		token = token.slice(7, token.length);
 	}
@@ -41,7 +40,7 @@ function verifyToken(request: Request, response: Response) {
 		const user = jwt.verify(token, JWTConfig.secretKey);
 		(<any>request).user = user;
 		(<any>response).user = user;
-	} catch(error) {
+	} catch (error) {
 		return sendErrorResponse(request, response, error);
 	}
 }
@@ -49,9 +48,7 @@ function verifyToken(request: Request, response: Response) {
 function validateAuthentication(request: Request, response: Response, next: NextFunction) {
 	verifyToken(request, response);
 	if (!(<any>request).user) {
-		return sendErrorResponse(request, response,
-			craftError("You are not authorised to access this resource.", 401)
-		);
+		return sendErrorResponse(request, response, craftError("You are not authorised to access this resource.", 401));
 	}
 	next();
 }
@@ -65,7 +62,9 @@ function addRoute(
 	handler: RequestHandler
 ) {
 	const _handler = isAsyncHandler ? promisify(handler) : handler;
-	isProtectedRoute && JWTConfig.isActive ? (<any>app)[method](route, validateAuthentication, _handler) : (<any>app)[method](route, _handler);
+	isProtectedRoute && JWTConfig.isActive
+		? (<any>app)[method](route, validateAuthentication, _handler)
+		: (<any>app)[method](route, _handler);
 }
 
 export function createRouter(app: Application): IRouter {
@@ -182,15 +181,15 @@ export function sendErrorResponse(request: Request, response: Response, error: E
 
 export function sendSuccessResponse(response: Response, ...args: any[]) {
 	const obj: {
-		success: boolean
-		code: number
-		user_id: string
-		message?: string
-		data?: any
+		success: boolean;
+		code: number;
+		user_id: string;
+		message?: string;
+		data?: any;
 	} = {
 		success: true,
 		code: 200,
-		user_id: !!(<any>response).user ? (<any>response).user._id : null
+		user_id: !!(<any>response).user ? (<any>response).user._id : null,
 	};
 	for (const arg of args) {
 		if (isString(arg)) {

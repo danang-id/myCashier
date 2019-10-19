@@ -14,31 +14,36 @@
  */
 
 import path from "path";
-import isString from 'lodash.isstring';
-import dotenv from 'dotenv';
+import isString from "lodash.isstring";
+import dotenv from "dotenv";
 import { PathLike } from "fs";
 dotenv.config();
 
 function createAbsolutePath(relativePath: string): PathLike {
-	return path.join(__dirname, '..', '..', relativePath)
+	return path.join(__dirname, "..", "..", relativePath);
 }
 
 export const JWTConfig: JWTConfiguration = {
-	isActive: typeof process.env.USE_JWT !== "undefined"
-		? isString(process.env.USE_JWT) ? process.env.USE_JWT === "true" : process.env.USE_JWT
-		: false,
+	isActive:
+		typeof process.env.USE_JWT !== "undefined"
+			? isString(process.env.USE_JWT)
+				? process.env.USE_JWT === "true"
+				: process.env.USE_JWT
+			: false,
 	secretKey: process.env.JWT_SECRET_KEY || "",
-	privateKeyPath: typeof process.env.PRIVATE_KEY_PATH !== "undefined"
-		? createAbsolutePath(process.env.PRIVATE_KEY_PATH)
-		: createAbsolutePath(path.join("keys", "id_rsa")),
-	publicKeyPath: typeof process.env.PUBLIC_KEY_PATH !== "undefined"
-		? createAbsolutePath(process.env.PUBLIC_KEY_PATH)
-		: createAbsolutePath(path.join("keys", "id_rsa.pub"))
+	privateKeyPath:
+		typeof process.env.PRIVATE_KEY_PATH !== "undefined"
+			? createAbsolutePath(process.env.PRIVATE_KEY_PATH)
+			: createAbsolutePath(path.join("keys", "id_rsa")),
+	publicKeyPath:
+		typeof process.env.PUBLIC_KEY_PATH !== "undefined"
+			? createAbsolutePath(process.env.PUBLIC_KEY_PATH)
+			: createAbsolutePath(path.join("keys", "id_rsa.pub")),
 };
 
 type JWTConfiguration = {
-	isActive: boolean,
-	secretKey: string,
-	privateKeyPath: PathLike,
-	publicKeyPath: PathLike,
-}
+	isActive: boolean;
+	secretKey: string;
+	privateKeyPath: PathLike;
+	publicKeyPath: PathLike;
+};

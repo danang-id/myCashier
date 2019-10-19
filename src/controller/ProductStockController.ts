@@ -17,7 +17,13 @@ import clone from "lodash.clone";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
+import {
+	craftError,
+	sendErrorResponse,
+	sendSuccessResponse,
+	validateRequest,
+	RequestRequirements,
+} from "../helpers/express";
 import { IProduct } from "../model/IProduct";
 import { ModelChoice } from "../model/factory/DatabaseFactory";
 
@@ -30,24 +36,30 @@ export async function addProductStock(request: Request, response: Response) {
 		validateRequest(request, requirements);
 		await Product.initialise();
 		await Product.startTransaction();
-		let product = <IProduct> await Product.fetchByID<IProduct>(request.body._id);
+		let product = <IProduct>await Product.fetchByID<IProduct>(request.body._id);
 		if (!product) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Product with ID " + request.body._id + " is not found.", 404)
 			);
 		}
 		request.body.value = parseInt(request.body.value);
 		if (request.body.value <= 0) {
-			return sendErrorResponse(request, response,
-				craftError(
-				"Parameter \"value\" should be a positive integer. Given: " + request.body.value + ".",
-				400)
+			return sendErrorResponse(
+				request,
+				response,
+				craftError('Parameter "value" should be a positive integer. Given: ' + request.body.value + ".", 400)
 			);
 		}
 		product.stock = product.stock + request.body.value;
-		product = <IProduct> await Product.modifyByID<IProduct>(product, product._id);
+		product = <IProduct>await Product.modifyByID<IProduct>(product, product._id);
 		await Product.commit();
-		sendSuccessResponse(response, product, "Successfully added " + request.body.value + " stock of " + product.name + ".");
+		sendSuccessResponse(
+			response,
+			product,
+			"Successfully added " + request.body.value + " stock of " + product.name + "."
+		);
 	} catch (error) {
 		await Product.rollback();
 		return sendErrorResponse(request, response, error);
@@ -65,18 +77,20 @@ export async function reduceProductStock(request: Request, response: Response) {
 		validateRequest(request, requirements);
 		await Product.initialise();
 		await Product.startTransaction();
-		let product = <IProduct> await Product.fetchByID<IProduct>(request.body._id);
+		let product = <IProduct>await Product.fetchByID<IProduct>(request.body._id);
 		if (!product) {
-			return sendErrorResponse(request, response,
+			return sendErrorResponse(
+				request,
+				response,
 				craftError("Product with ID " + request.body._id + " is not found.", 404)
 			);
 		}
 		request.body.value = parseInt(request.body.value);
 		if (request.body.value <= 0) {
-			return sendErrorResponse(request, response,
-				craftError(
-				"Parameter \"value\" should be a positive integer. Given: " + request.body.value + ".",
-				400)
+			return sendErrorResponse(
+				request,
+				response,
+				craftError('Parameter "value" should be a positive integer. Given: ' + request.body.value + ".", 400)
 			);
 		}
 		const oldStock = product.stock;
@@ -85,9 +99,13 @@ export async function reduceProductStock(request: Request, response: Response) {
 			stock = 0;
 		}
 		product.stock = stock;
-		product = <IProduct> await Product.modifyByID<IProduct>(product, product._id);
+		product = <IProduct>await Product.modifyByID<IProduct>(product, product._id);
 		await Product.commit();
-		sendSuccessResponse(response, product, "Successfully reduced " + (oldStock - stock) + " stock of " + product.name + ".");
+		sendSuccessResponse(
+			response,
+			product,
+			"Successfully reduced " + (oldStock - stock) + " stock of " + product.name + "."
+		);
 	} catch (error) {
 		await Product.rollback();
 		return sendErrorResponse(request, response, error);
