@@ -137,6 +137,8 @@ export async function addProductTransactionQuantity(request: Request, response: 
 				created_at: (new Date()).getTime(),
 				updated_at: null
 			});
+		} else {
+			productTransaction.updated_at = (new Date()).getTime();
 		}
 		productTransaction.quantity = productTransaction.quantity + request.body.value;
 		product.stock = product.stock - request.body.value;
@@ -203,6 +205,8 @@ export async function reduceProductTransactionQuantity(request: Request, respons
 				created_at: (new Date()).getTime(),
 				updated_at: null
 			});
+		} else {
+			productTransaction.updated_at = (new Date()).getTime();
 		}
 		if (request.body.value > productTransaction.quantity) {
 			request.body.value = productTransaction.quantity;
