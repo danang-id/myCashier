@@ -14,6 +14,7 @@
 
 * [Point of Sales](#point-of-sales)
   * [List of Contents](#list-of-contents)   
+  * [Stack Used](#stack-used)
   * [System Requirement](#system-requirements)
   * [Getting Started](#getting-started)
   * [Documentation](#documentation)
@@ -23,6 +24,23 @@
   * [Authors](#authors)
   * [License](#license)
   * [Acknowledgments](#acknowledgments)
+
+## Stack Used
+
+These stacks are used in this program.
+
+ * TypeScript
+ * Babel
+ * ExpressJS, Express Body Parser and Express CORS
+ * Morgan
+ * Helmet
+ * JSON Web Token
+ * MySQL and MySQL X Dev API (chosen by Database Factory)
+ * UUID and Short UUID
+ * bcrypt
+ * Lodash
+ * StackTraceJS
+ * Chai and Mocha for Test Driven Development
 
 ## System Requirements
 

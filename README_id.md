@@ -13,7 +13,8 @@
 ## Daftar Isi
 
 * [Point of Sales](#point-of-sales)
-  * [Daftar Isi](#daftar-isi)
+  * [Daftar Isi](#daftar-isi) 
+  * [Stack yang Digunakan](#stack-yang-digunakan)
   * [Kebutuhan Sistem](#kebutuhan-sistem)
   * [Memulai](#memulai)
   * [Dokumentasi](#dokumentasi)
@@ -23,6 +24,23 @@
   * [Penulis](#penulis)
   * [Lisensi](#lisensi)
   * [Pengakuan](#pengakuan)
+
+## Stack yang Digunakan
+
+Ini adalah stack yang digunakan di dalam program ini.
+
+ * TypeScript
+ * Babel
+ * ExpressJS, Express Body Parser and Express CORS
+ * Morgan
+ * Helmet
+ * JSON Web Token
+ * MySQL and MySQL X Dev API (chosen by Database Factory)
+ * UUID and Short UUID
+ * bcrypt
+ * Lodash
+ * StackTraceJS
+ * Chai and Mocha for Test Driven Development
 
 ## Kebutuhan Sistem
 
