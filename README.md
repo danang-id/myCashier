@@ -14,7 +14,6 @@
 
 * [Point of Sales](#point-of-sales)
   * [List of Contents](#list-of-contents)
-  * [Changes Log (What's New)](#changes-log-whats-new)
   * [System Requirement](#system-requirements)
   * [Getting Started](#getting-started)
   * [Documentation](#documentation)
@@ -24,10 +23,6 @@
   * [Authors](#authors)
   * [License](#license)
   * [Acknowledgments](#acknowledgments)
-
-## Changes Log (What's New)
-
-* Initial commit with Babel and Typescript
 
 ## System Requirements
 

@@ -19,7 +19,7 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { sendSuccessResponse, throwError, validateRequest, RequestRequirements } from "../helpers/express";
+import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
 import { IUser } from "../model/IUser";
 import { ModelChoice } from "../model/factory/DatabaseFactory";
 import { UUID } from "../helpers/uuid";
@@ -35,12 +35,18 @@ export async function registerUser(request: Request, response: Response) {
 		await User.initialise();
 		await User.startTransaction();
 		const shortUUID = UUID.generateShort();
-		let user: IUser = {
+		let user = <IUser> await User.fetchOne<IUser>({ email_address:request.body.email_address });
+		if (!!user) {
+			return sendErrorResponse(request, response,
+				craftError("Registration failed. Email address " + request.body.email_address + " has already been registered.", 400)
+			);
+		}
+		user = {
 			_id: shortUUID,
 			given_name: request.body.given_name,
 			maiden_name: request.body.maiden_name,
 			email_address: request.body.email_address,
-			password: bcrypt.hashSync(request.query.password, shortUUID),
+			password: bcrypt.hashSync(request.body.password, 10),
 			created_at: (new Date()).getTime(),
 			updated_at: null
 		};
@@ -49,7 +55,7 @@ export async function registerUser(request: Request, response: Response) {
 		sendSuccessResponse(response, "Successfully registered " + user.given_name + " " + user.maiden_name + ".");
 	} catch (error) {
 		await User.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await User.close();
 	}
@@ -64,21 +70,25 @@ export async function signInUser(request: Request, response: Response) {
 		validateRequest(request, requirements);
 		await User.initialise();
 		await User.startTransaction();
-		const user = <IUser> await User.fetchOne<IUser>({ email_address: request.query.email_address });
+		const user = <IUser> await User.fetchOne<IUser>({ email_address: request.body.email_address });
 		if (!user) {
-			throwError("Sign in failed! Please check your email address or password.", 400);
+			return sendErrorResponse(request, response,
+				craftError("Sign in failed! Please check your email address or password.", 400)
+			);
 		}
-		if (!bcrypt.compareSync(request.query.password, user.password)) {
-			throwError("Sign in failed! Please check your email address or password.", 400);
+		if (!bcrypt.compareSync(request.body.password, user.password)) {
+			return sendErrorResponse(request, response,
+				craftError("Sign in failed! Please check your email address or password.", 400)
+			);
 		}
 		const { password, ...signedUser } = user;
-		const privateKey = fs.readFileSync(JWTConfig.privateKeyPath);
-		const token = jwt.sign(signedUser, privateKey);
+		// const privateKey = fs.readFileSync(JWTConfig.privateKeyPath);
+		const token = jwt.sign(signedUser, JWTConfig.secretKey);
 		await User.commit();
 		sendSuccessResponse(response, { token  });
 	} catch (error) {
 		await User.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await User.close();
 	}

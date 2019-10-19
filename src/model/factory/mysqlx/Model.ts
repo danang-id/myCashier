@@ -16,7 +16,7 @@
 import mysqlx, { Client, Session, Schema, Collection } from "mysqlx";
 import { DatabaseConfig} from "../../../config/database.config";
 import { Identifier, IModel, SearchCondition, SearchConditionString } from "../IModel";
-import { throwError } from "../../../helpers/express";
+import { craftError } from "../../../helpers/express";
 
 export class Model implements IModel {
 
@@ -35,15 +35,15 @@ export class Model implements IModel {
 	}
 
 	public async close(): Promise<boolean> {
-		if (typeof this.backbone === "undefined") {
-			throw new Error("Connection has not been initialised.")
+		if (typeof this.backbone !== "undefined" && typeof this.backbone.client !== "undefined") {
+			try {
+				await this.backbone.client.close();
+				return true;
+			} catch (error) {
+				throw error;
+			}
 		}
-		try {
-			await this.backbone.client.close();
-			return true;
-		} catch (error) {
-			throw error;
-		}
+		return false;
 	}
 
 	public async commit(): Promise<boolean> {
@@ -65,9 +65,9 @@ export class Model implements IModel {
 			const result = await this.backbone.collection.add(document).execute();
 			if (result.getWarningsCount() > 0) {
 				const warning = result.getWarnings()[0];
-				throwError(warning.msg, warning.code);
+				throw craftError(warning.msg, warning.code);
 			}
-			const identifier = !(<any>document)._id ? (<any>document)._id : result.getGeneratedIds()[0];
+			const identifier = !!(<any>document)._id ? (<any>document)._id : result.getGeneratedIds()[0];
 			return <T> await this.fetchByID(identifier);
 		} catch (error) {
 			throw error;
@@ -82,7 +82,7 @@ export class Model implements IModel {
 			const result = await this.backbone.collection.find(condition).execute();
 			if (result.getWarningsCount() > 0) {
 				const warning = result.getWarnings()[0];
-				throwError(warning.msg, warning.code);
+				throw craftError(warning.msg, warning.code);
 			}
 			return <T[]> result.getDocuments();
 		} catch (error) {
@@ -95,7 +95,8 @@ export class Model implements IModel {
 			throw new Error("Connection has not been initialised.")
 		}
 		try {
-			return <T> await this.backbone.collection.findOne(_id);
+			console.log(this.modelName, _id);
+			return <T> await this.backbone.collection.findByID(_id);
 		} catch (error) {
 			throw error;
 		}
@@ -113,36 +114,40 @@ export class Model implements IModel {
 	}
 
 	public async initialise<B>(backbone?: B): Promise<B> {
-		if (typeof backbone !== "undefined" && Model.isBackbone(backbone)) {
-			this.backbone = backbone;
-		} else {
-			this.backbone = <any> {};
-			// @ts-ignore
-			this.backbone.client = mysqlx.getClient({
-				host: DatabaseConfig.host,
-				port: DatabaseConfig.port,
-				schema: DatabaseConfig.schema,
-				user: DatabaseConfig.user,
-				password: DatabaseConfig.password
-			}, DatabaseConfig.poolingOptions);
-			// @ts-ignore
-			this.backbone.session = await this.backbone.client.getSession();
-			// @ts-ignore
-			this.backbone.schema = await this.backbone.session.getSchema(DatabaseConfig.schema);
-			// @ts-ignore
-			if (!this.backbone.schema.existsInDatabase()) {
+		try {
+			if (typeof backbone !== "undefined" && Model.isBackbone(backbone)) {
+				this.backbone = backbone;
+			} else {
+				this.backbone = <any> {};
 				// @ts-ignore
-				this.backbone.schema = await this.backbone.session.createSchema(DatabaseConfig.schema);
+				this.backbone.client = mysqlx.getClient({
+					host: DatabaseConfig.host,
+					port: DatabaseConfig.port,
+					schema: DatabaseConfig.schema,
+					user: DatabaseConfig.user,
+					password: DatabaseConfig.password
+				}, DatabaseConfig.poolingOptions);
+				// @ts-ignore
+				this.backbone.session = await this.backbone.client.getSession();
+				// @ts-ignore
+				this.backbone.schema = await this.backbone.session.getSchema(DatabaseConfig.schema);
+				// @ts-ignore
+				if (!(await this.backbone.schema.existsInDatabase())) {
+					// @ts-ignore
+					this.backbone.schema = await this.backbone.session.createSchema(DatabaseConfig.schema);
+				}
 			}
-		}
-		// @ts-ignore
-		this.backbone.collection = await this.backbone.schema.getCollection(this.modelName);
-		// @ts-ignore
-		if (!this.backbone.collection.existsInDatabase()) {
 			// @ts-ignore
-			this.backbone.collection = await this.backbone.schema.createCollection(this.modelName);
+			this.backbone.collection = await this.backbone.schema.getCollection(this.modelName);
+			// @ts-ignore
+			if (!(await this.backbone.collection.existsInDatabase())) {
+				// @ts-ignore
+				this.backbone.collection = await this.backbone.schema.createCollection(this.modelName);
+			}
+			return <B> <unknown> this.backbone;
+		} catch(error) {
+			throw error;
 		}
-		return <B> <unknown> this.backbone;
 	}
 
 	public async modify<T>(document: T, condition: SearchCondition | SearchConditionString = true): Promise<T[]> {
@@ -153,7 +158,7 @@ export class Model implements IModel {
 			const result = await this.backbone.collection.modify(condition).patch(document).execute();
 			if (result.getWarningsCount() > 0) {
 				const warning = result.getWarnings()[0];
-				throwError(warning.msg, warning.code);
+				throw craftError(warning.msg, warning.code);
 			}
 			return <T[]> await this.fetch(condition);
 		} catch (error) {
@@ -181,7 +186,7 @@ export class Model implements IModel {
 			const result = await this.backbone.collection.remove(condition).execute();
 			if (result.getWarningsCount() > 0) {
 				const warning = result.getWarnings()[0];
-				throwError(warning.msg, warning.code);
+				throw craftError(warning.msg, warning.code);
 			}
 			return result.getAffectedItemsCount() > 0;
 		} catch (error) {
@@ -197,7 +202,7 @@ export class Model implements IModel {
 			const result = await this.backbone.collection.removeByID(_id);
 			if (result.getWarningsCount() > 0) {
 				const warning = result.getWarnings()[0];
-				throwError(warning.msg, warning.code);
+				throw craftError(warning.msg, warning.code);
 			}
 			return result.getAffectedItemsCount() > 0;
 		} catch (error) {
@@ -206,14 +211,14 @@ export class Model implements IModel {
 	}
 
 	public async rollback(): Promise<boolean> {
-		if (typeof this.backbone === "undefined") {
-			throw new Error("Connection has not been initialised.")
+		if (typeof this.backbone !== "undefined" && typeof this.backbone.client !== "undefined") {
+			try {
+				return await this.backbone.session.rollback();
+			} catch (error) {
+				throw error;
+			}
 		}
-		try {
-			return await this.backbone.session.rollback();
-		} catch (error) {
-			throw error;
-		}
+		return false;
 	}
 
 	public async startTransaction(): Promise<boolean> {

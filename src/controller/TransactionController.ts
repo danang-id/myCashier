@@ -17,7 +17,7 @@
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { sendSuccessResponse, throwError, validateRequest, RequestRequirements } from "../helpers/express";
+import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
 import { IProduct } from "../model/IProduct";
 import { IProductTransaction } from "../model/IProductTransaction";
 import { ITransaction } from "../model/ITransaction";
@@ -38,7 +38,9 @@ export async function getTransaction(request: Request, response: Response) {
 		await Transaction.initialise(backbone);
 		const transaction = <ITransaction> await Transaction.fetchByID<ITransaction>(request.body.transaction_id);
 		if (!transaction) {
-			throwError("Transaction with ID " + request.body.transaction_id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Transaction with ID " + request.body.transaction_id + " is not found.", 404)
+			);
 		}
 		const responseObject: any = transaction;
 		const productTransactions = <IProductTransaction[]> await ProductTransaction.fetch<IProductTransaction>(
@@ -55,7 +57,7 @@ export async function getTransaction(request: Request, response: Response) {
 		}
 		sendSuccessResponse(response, responseObject);
 	} catch (error) {
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Transaction.close();
 	}
@@ -75,7 +77,7 @@ export async function createNewTransaction(request: Request, response: Response)
 		sendSuccessResponse(response, transaction, "Successfully created new transaction.");
 	} catch (error) {
 		await Transaction.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Transaction.close();
 	}
@@ -96,17 +98,22 @@ export async function addProductTransactionQuantity(request: Request, response: 
 		await Transaction.startTransaction();
 		let product = <IProduct> await Product.fetchByID<IProduct>(request.body.product_id);
 		if (!product) {
-			throwError("Product with ID " + request.body.product_id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Product with ID " + request.body.product_id + " is not found.", 404)
+			);
 		}
 		const transaction = <ITransaction> await Transaction.fetchByID<ITransaction>(request.body.transaction_id);
 		if (!transaction) {
-			throwError("Transaction with ID " + request.body.transaction_id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Transaction with ID " + request.body.transaction_id + " is not found.", 404)
+			);
 		}
 		request.body.value = parseInt(request.body.value);
 		if (request.body.value <= 0) {
-			throwError(
+			return sendErrorResponse(request, response,
+				craftError(
 				"Parameter \"value\" should be a positive integer. Given: " + request.body.value + ".",
-				400
+				400)
 			);
 		}
 		let outOfStock = false;
@@ -141,7 +148,7 @@ export async function addProductTransactionQuantity(request: Request, response: 
 		sendSuccessResponse(response, productTransaction, message);
 	} catch (error) {
 		await Transaction.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Transaction.close();
 	}
@@ -162,17 +169,22 @@ export async function reduceProductTransactionQuantity(request: Request, respons
 		await Transaction.startTransaction();
 		let product = <IProduct> await Product.fetchByID<IProduct>(request.body.product_id);
 		if (!product) {
-			throwError("Product with ID " + request.body.product_id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Product with ID " + request.body.product_id + " is not found.", 404)
+			);
 		}
 		const transaction = <ITransaction> await Product.fetchByID<ITransaction>(request.body.transaction_id);
 		if (!product) {
-			throwError("Transaction with ID " + request.body.transaction_id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Transaction with ID " + request.body.transaction_id + " is not found.", 404)
+			);
 		}
 		request.body.value = parseInt(request.body.value);
 		if (request.body.value <= 0) {
-			throwError(
+			return sendErrorResponse(request, response,
+				craftError(
 				"Parameter \"value\" should be a positive integer. Given: " + request.body.value + ".",
-				400
+				400)
 			);
 		}
 		let productTransaction = <IProductTransaction> await ProductTransaction.fetchOne({
@@ -180,7 +192,9 @@ export async function reduceProductTransactionQuantity(request: Request, respons
 			transaction_id: transaction._id
 		});
 		if (!productTransaction) {
-			throwError("This transaction has 0 quantity of product " + product.name + ". Cannot reduce quantity.", 400);
+			return sendErrorResponse(request, response,
+				craftError("This transaction has 0 quantity of product " + product.name + ". Cannot reduce quantity.", 400)
+			);
 		}
 		if (request.body.value > productTransaction.quantity) {
 			request.body.value = productTransaction.quantity;
@@ -195,7 +209,7 @@ export async function reduceProductTransactionQuantity(request: Request, respons
 		sendSuccessResponse(response, productTransaction, "Successfully reduced " + request.body.value + " quantity of " + product.name + ".");
 	} catch (error) {
 		await Transaction.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Transaction.close();
 	}

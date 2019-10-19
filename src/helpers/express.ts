@@ -13,9 +13,13 @@
  * limitations under the License.
  */
 
+import fs from "fs";
+import jwt from "jsonwebtoken";
 import morgan from "morgan";
 import isString from "lodash.isstring";
 import { Application, NextFunction, Request, RequestHandler, Response } from "express-serve-static-core";
+import { createLogger } from "./logger";
+import { JWTConfig } from "../config/jwt.config";
 import { ILogger } from "../interfaces/ILogger";
 import { IRouter } from "../interfaces/IRouter";
 
@@ -26,9 +30,28 @@ export function promisify(handler: RequestHandler) {
 	};
 }
 
+function verifyToken(request: Request, response: Response) {
+	// const publicKey = fs.readFileSync(JWTConfig.publicKeyPath);
+	let token: string = <string>request.headers['x-access-token'] || request.headers['authorization'] || "";
+	if ((<string>token).startsWith('Bearer ')) {
+		// Remove Bearer from string
+		token = token.slice(7, token.length);
+	}
+	try {
+		const user = jwt.verify(token, JWTConfig.secretKey);
+		(<any>request).user = user;
+		(<any>response).user = user;
+	} catch(error) {
+		return sendErrorResponse(request, response, error);
+	}
+}
+
 function validateAuthentication(request: Request, response: Response, next: NextFunction) {
+	verifyToken(request, response);
 	if (!(<any>request).user) {
-		throwError("You are not authorised to access this resource.", 401);
+		return sendErrorResponse(request, response,
+			craftError("You are not authorised to access this resource.", 401)
+		);
 	}
 	next();
 }
@@ -88,11 +111,10 @@ export function createRouter(app: Application): IRouter {
 export function notFound(request: Request, response: Response, next: NextFunction) {
 	const error = new Error();
 	(<any>error).code = 404;
-	next(error);
+	return sendErrorResponse(request, response, error);
 }
 
 export function createErrorHandler(logger: ILogger) {
-	logger.i("Added customised error handler middleware.");
 	return function(error: Error, request: Request, response: Response) {
 		(<any>error).code = (<any>error).code || 500;
 		if (!error.message || error.message === "") {
@@ -105,6 +127,7 @@ export function createErrorHandler(logger: ILogger) {
 		}
 		if ((<any>error).code === 500) {
 			logger.d(error.message, error, true);
+			console.error(error);
 		} else {
 			logger.d(error.message);
 		}
@@ -137,7 +160,7 @@ export function validateRequest(request: Request, requirements: RequestRequireme
 				const fields = (<any>requirements)[requestElement];
 				for (const field of fields) {
 					if (!(<any>request)[requestElement][field]) {
-						throwError('Parameter "' + field + '" is required.', 400);
+						throw craftError('Parameter "' + field + '" is required.', 400);
 					}
 				}
 			}
@@ -147,10 +170,14 @@ export function validateRequest(request: Request, requirements: RequestRequireme
 	}
 }
 
-export function throwError(message: string, code: number) {
+export function craftError(message: string, code: number) {
 	const error = new Error(message);
 	(<any>error).code = code;
-	throw error;
+	return error;
+}
+
+export function sendErrorResponse(request: Request, response: Response, error: Error, data?: any) {
+	createErrorHandler(createLogger("Process"))(error, request, response);
 }
 
 export function sendSuccessResponse(response: Response, ...args: any[]) {
@@ -159,6 +186,7 @@ export function sendSuccessResponse(response: Response, ...args: any[]) {
 		code: number
 		message?: string
 		data?: any
+		user_id?: string
 	} = { success: true, code: 200 };
 	for (const arg of args) {
 		if (isString(arg)) {
@@ -166,6 +194,9 @@ export function sendSuccessResponse(response: Response, ...args: any[]) {
 		} else {
 			obj.data = !!obj.data ? obj.data : arg;
 		}
+	}
+	if (!!(<any>response).user) {
+		obj.user_id = (<any>response).user._id;
 	}
 	response.json(obj);
 }

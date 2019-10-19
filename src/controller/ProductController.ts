@@ -16,7 +16,7 @@
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { sendSuccessResponse, throwError, validateRequest, RequestRequirements } from "../helpers/express";
+import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
 import { UUID } from "../helpers/uuid";
 import { ICategory } from "../model/ICategory";
 import { IProduct } from "../model/IProduct";
@@ -53,7 +53,7 @@ export async function getProducts(request: Request, response: Response) {
 		products = products.slice(skip, offset);
 		sendSuccessResponse(response, products);
 	} catch (error) {
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Product.close();
 	}
@@ -69,11 +69,13 @@ export async function getProduct(request: Request, response: Response) {
 		await Product.initialise();
 		const product = await Product.fetchByID<IProduct>(request.query._id);
 		if (!product) {
-			throwError("Product with ID " + request.query._id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Product with ID " + request.query._id + " is not found.", 404)
+			);
 		}
 		sendSuccessResponse(response, product);
 	} catch (error) {
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Product.close();
 	}
@@ -90,9 +92,11 @@ export async function createProduct(request: Request, response: Response) {
 		const backbone = await Category.initialise();
 		await Product.initialise(backbone);
 		await Product.startTransaction();
-		const category = <ICategory> await Category.fetchByID<ICategory>(request.body.category_id);
-		if (!category) {
-			throwError("Category with ID " + request.body.category_id + " is not found.", 404);
+		const categories = <ICategory[]> await Category.fetch<ICategory>({ _id: request.body.category_id });
+		if (categories.length < 0) {
+			return sendErrorResponse(request, response,
+				craftError("Category with ID " + request.body.category_id + " is not found.", 404)
+			);
 		}
 		let product: IProduct = {
 			_id: UUID.generateShort(),
@@ -100,7 +104,7 @@ export async function createProduct(request: Request, response: Response) {
 			description: request.body.description,
 			image: request.body.image,
 			price: request.body.price,
-			category_id: category._id,
+			category_id: request.body.category_id,
 			stock: 0,
 			created_at: (new Date()).getTime(),
 			updated_at: null,
@@ -110,7 +114,7 @@ export async function createProduct(request: Request, response: Response) {
 		sendSuccessResponse(response, product, "Successfully created product " + product.name + ".");
 	} catch (error) {
 		await Product.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Product.close();
 	}
@@ -129,24 +133,28 @@ export async function modifyProduct(request: Request, response: Response) {
 		await Product.startTransaction();
 		let product = <IProduct> await Product.fetchByID<IProduct>(request.query._id);
 		if (!product) {
-			throwError("Product with ID " + request.query._id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Product with ID " + request.query._id + " is not found.", 404)
+			);
 		}
-		const category = <ICategory> await Product.fetchByID<ICategory>(request.body.category_id);
-		if (!category) {
-			throwError("Parameter \"category_id\" is invalid. Category with ID " + request.body.category_id + " is not found.", 404);
+		const categories = <ICategory[]> await Product.fetch<ICategory>({ _id: request.body.category_id });
+		if (categories.length === 0) {
+			return sendErrorResponse(request, response,
+				craftError("Parameter \"category_id\" is invalid. Category with ID " + request.body.category_id + " is not found.", 404)
+			);
 		}
 		product.name = request.body.name || product.name;
 		product.description = request.body.description || product.description;
 		product.image = request.body.image || product.image;
 		product.price = request.body.price || product.price;
-		product.category_id = category._id;
+		product.category_id = request.body.category_id;
 		product.updated_at = (new Date()).getTime();
 		product = <IProduct> await Product.modifyByID(product, product._id);
 		await Product.commit();
 		sendSuccessResponse(response, product, "Successfully modified product " + product.name + ".");
 	} catch (error) {
 		await Product.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Product.close();
 	}
@@ -163,14 +171,16 @@ export async function deleteProduct(request: Request, response: Response) {
 		await Product.startTransaction();
 		let product = <IProduct> await Product.fetchByID<IProduct>(request.query._id);
 		if (!product) {
-			throwError("Product with ID " + request.query._id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Product with ID " + request.query._id + " is not found.", 404)
+			);
 		}
 		await Product.removeByID(product._id);
 		await Product.commit();
 		sendSuccessResponse(response, "Successfully deleted category " + product.name + ".");
 	} catch (error) {
 		await Product.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Product.close();
 	}

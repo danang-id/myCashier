@@ -14,7 +14,6 @@
 
 * [Point of Sales](#point-of-sales)
   * [Daftar Isi](#daftar-isi)
-  * [Changes Log (What's New)](#changes-log-whats-new)
   * [Kebutuhan Sistem](#kebutuhan-sistem)
   * [Memulai](#memulai)
   * [Dokumentasi](#dokumentasi)
@@ -24,10 +23,6 @@
   * [Penulis](#penulis)
   * [Lisensi](#lisensi)
   * [Pengakuan](#pengakuan)
-
-## Changes Log (What's New)
-
-* Commit awal dengan TypeScript dan Babel
 
 ## Kebutuhan Sistem
 

@@ -59,15 +59,15 @@ export class Model implements IModel {
 	}
 
 	public async close(): Promise<boolean> {
-		if (typeof this.backbone === "undefined") {
-			throw new Error("Connection has not been initialised.")
+		if (typeof this.backbone !== "undefined" && typeof this.backbone.connection !== "undefined") {
+			try {
+				await this.backbone.connection.end();
+				return true;
+			} catch (error) {
+				throw error;
+			}
 		}
-		try {
-			await this.backbone.connection.end();
-			return true;
-		} catch (error) {
-			throw error;
-		}
+		return false;
 	}
 
 	public async commit(): Promise<boolean> {
@@ -204,15 +204,15 @@ export class Model implements IModel {
 	}
 
 	public async rollback(): Promise<boolean> {
-		if (typeof this.backbone === "undefined") {
-			throw new Error("Connection has not been initialised.")
+		if (typeof this.backbone !== "undefined" && typeof this.backbone.connection !== "undefined") {
+			try {
+				await this.backbone.connection.rollback();
+				return true;
+			} catch (error) {
+				throw error;
+			}
 		}
-		try {
-			await this.backbone.connection.rollback();
-			return true;
-		} catch (error) {
-			throw error;
-		}
+		return false;
 	}
 
 	public async startTransaction(): Promise<boolean> {

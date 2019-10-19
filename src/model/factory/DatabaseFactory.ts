@@ -14,15 +14,17 @@
  */
 
 import { IModel } from "./IModel";
+import { Model } from "./mysql/Model";
+import { Model as ModelX } from "./mysqlx/Model";
 
 export class DatabaseFactory {
 
 	public static getModel(factoryChoice: FactoryChoice, modelChoice: ModelChoice): IModel {
 		switch(factoryChoice) {
 			case FactoryChoice.MySQL:
-				return require("./mysql/Model")(modelChoice);
+				return new Model(modelChoice);
 			case FactoryChoice.MySQLX:
-				return require("./mysqlx/Model")(modelChoice);
+				return new ModelX(modelChoice);
 			default:
 				throw new Error("Factory choice " + factoryChoice + " is unknown.");
 		}
@@ -31,12 +33,12 @@ export class DatabaseFactory {
 }
 
 export enum FactoryChoice {
-	MySQL,
-	MySQLX
+	MySQL = "mysql",
+	MySQLX = "mysqlx"
 }
 
 export enum ModelChoice {
-	Category = "collections",
+	Category = "categories",
 	Product = "products",
 	ProductTransaction = "product_transaction",
 	Transaction = "transactions",

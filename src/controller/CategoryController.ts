@@ -17,7 +17,7 @@
 import { Request, Response } from "express-serve-static-core";
 
 import { getModel } from "../helpers/database";
-import { RequestRequirements, sendSuccessResponse, throwError, validateRequest } from "../helpers/express";
+import { craftError, sendErrorResponse, sendSuccessResponse, validateRequest, RequestRequirements } from "../helpers/express";
 import { UUID } from "../helpers/uuid";
 import { ICategory } from "../model/ICategory";
 import { IProduct } from "../model/IProduct";
@@ -26,11 +26,11 @@ import { ModelChoice } from "../model/factory/DatabaseFactory";
 export async function getCategories(request: Request, response: Response) {
 	const Category = getModel(ModelChoice.Category);
 	try {
-		await Category.initialise();
+		const b = await Category.initialise();
 		const categories = await Category.fetch<ICategory>();
 		sendSuccessResponse(response, categories);
 	} catch (error) {
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Category.close();
 	}
@@ -46,11 +46,13 @@ export async function getCategory(request: Request, response: Response) {
 		await Category.initialise();
 		const category = await Category.fetchByID<ICategory>(request.query._id);
 		if (!category) {
-			throwError("Category with ID " + request.query._id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Category with ID " + request.query._id + " is not found.", 404)
+			);
 		}
 		sendSuccessResponse(response, category);
 	} catch (error) {
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Category.close();
 	}
@@ -77,7 +79,7 @@ export async function createCategory(request: Request, response: Response) {
 		sendSuccessResponse(response, category, "Successfully created category " + category.name + ".");
 	} catch (error) {
 		await Category.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Category.close();
 	}
@@ -94,7 +96,9 @@ export async function modifyCategory(request: Request, response: Response) {
 		await Category.startTransaction();
 		let category = <ICategory> await Category.fetchByID<ICategory>(request.query._id);
 		if (!category) {
-			throwError("Category with ID " + request.query._id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Category with ID " + request.query._id + " is not found.", 404)
+			);
 		}
 		category.name = request.body.name || category.name;
 		category.description = request.body.description || category.description;
@@ -104,7 +108,7 @@ export async function modifyCategory(request: Request, response: Response) {
 		sendSuccessResponse(response, category, "Successfully modified category " + category.name + ".");
 	} catch (error) {
 		await Category.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Category.close();
 	}
@@ -123,20 +127,24 @@ export async function deleteCategory(request: Request, response: Response) {
 		await Category.startTransaction();
 		let category = <ICategory> await Category.fetchByID<ICategory>(request.query._id);
 		if (!category) {
-			throwError("Category with ID " + request.query._id + " is not found.", 404);
+			return sendErrorResponse(request, response,
+				craftError("Category with ID " + request.query._id + " is not found.", 404)
+			);
 		}
 		const productsUnderThisCategory = await Product.fetch<IProduct>({ category_id: category._id });
 		if (productsUnderThisCategory.length > 0) {
 			const totalProduct = productsUnderThisCategory.length;
 			const counts = totalProduct === 1 ? "is 1 product" : "are " + totalProduct + " products";
-			throwError("Failed to delete category " + category.name + ". Currently, there " + counts + " that defined under this category. Please delete them first.", 400);
+			return sendErrorResponse(request, response,
+				craftError("Failed to delete category " + category.name + ". Currently, there " + counts + " that defined under this category. Please delete them first.", 400)
+			);
 		}
 		await Category.removeByID(category._id);
 		await Category.commit();
 		sendSuccessResponse(response, "Successfully deleted category " + category.name + ".");
 	} catch (error) {
 		await Category.rollback();
-		throw error;
+		return sendErrorResponse(request, response, error);
 	} finally {
 		await Category.close();
 	}

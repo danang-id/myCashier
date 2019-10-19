@@ -20,7 +20,6 @@ import express from "express";
 import cors from "cors";
 import { json, urlencoded } from "body-parser";
 import helmet from "helmet";
-import jwt from "express-jwt";
 
 import Controllers from "./controller";
 import Services from "./services";
@@ -34,7 +33,7 @@ const logger = createLogger("Application");
 const server = new http.Server(app);
 const port = process.env.PORT || 9000;
 const unprotectedEndpoints: string[] = [];
-const publicKey = fs.readFileSync(JWTConfig.publicKeyPath);
+const errorHandler = createErrorHandler(logger);
 /**
  * White-list temporarily disabled
 const corsWhiteList = ["http://localhost:" + port];
@@ -76,15 +75,7 @@ for (const key in Services) {
 
 logger.i("Added Main service to endpoint *.");
 app.use(Controllers.serve);
-if (JWTConfig.isActive) {
-	app.use(jwt({ secret: publicKey  })
-		.unless({
-			path: unprotectedEndpoints
-		}));
-}
-app.use(createErrorHandler(logger));
-
-console.log(app._router.stack);
+app.use(errorHandler);
 
 server.listen(port, function () {
 	logger.i("Server listening http://localhost:" + port + ".");

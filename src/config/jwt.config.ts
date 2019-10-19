@@ -27,6 +27,7 @@ export const JWTConfig: JWTConfiguration = {
 	isActive: typeof process.env.USE_JWT !== "undefined"
 		? isString(process.env.USE_JWT) ? process.env.USE_JWT === "true" : process.env.USE_JWT
 		: false,
+	secretKey: process.env.JWT_SECRET_KEY || "",
 	privateKeyPath: typeof process.env.PRIVATE_KEY_PATH !== "undefined"
 		? createAbsolutePath(process.env.PRIVATE_KEY_PATH)
 		: createAbsolutePath(path.join("keys", "id_rsa")),
@@ -37,6 +38,7 @@ export const JWTConfig: JWTConfiguration = {
 
 type JWTConfiguration = {
 	isActive: boolean,
+	secretKey: string,
 	privateKeyPath: PathLike,
 	publicKeyPath: PathLike,
 }
