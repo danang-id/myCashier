@@ -210,7 +210,7 @@ export class Model implements IModel {
 	}
 
 	public async rollback(): Promise<boolean> {
-		if (typeof this.backbone !== "undefined" && typeof this.backbone.client !== "undefined") {
+		if (typeof this.backbone !== "undefined" && typeof this.backbone.session !== "undefined") {
 			try {
 				return await this.backbone.session.rollback();
 			} catch (error) {
@@ -221,14 +221,14 @@ export class Model implements IModel {
 	}
 
 	public async startTransaction(): Promise<boolean> {
-		if (typeof this.backbone === "undefined") {
-			throw new Error("Connection has not been initialised.")
+		if (typeof this.backbone !== "undefined" && typeof this.backbone.session !== "undefined") {
+			try {
+				return await this.backbone.session.startTransaction();
+			} catch (error) {
+				throw error;
+			}
 		}
-		try {
-			return await this.backbone.session.startTransaction();
-		} catch (error) {
-			throw error;
-		}
+		return false;
 	}
 
 }
