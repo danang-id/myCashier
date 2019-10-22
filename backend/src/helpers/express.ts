@@ -29,9 +29,13 @@ export function promisify(handler: RequestHandler) {
 	};
 }
 
-function verifyToken(request: Request, response: Response) {
-	// const publicKey = fs.readFileSync(JWTConfig.publicKeyPath);
+function validateAuthentication(request: Request, response: Response, next: NextFunction) {
 	let token: string = <string>request.headers["x-access-token"] || request.headers["authorization"] || "";
+	if (!token) {
+		return sendErrorResponse(request, response, craftError(
+			"You are not authenticated.", 401
+		))
+	}
 	if ((<string>token).startsWith("Bearer ")) {
 		// Remove Bearer from string
 		token = token.slice(7, token.length);
@@ -41,12 +45,10 @@ function verifyToken(request: Request, response: Response) {
 		(<any>request).user = user;
 		(<any>response).user = user;
 	} catch (error) {
-		return sendErrorResponse(request, response, error);
+		return sendErrorResponse(request, response, craftError(
+			"Authentication failed. " + error.message, 403
+		));
 	}
-}
-
-function validateAuthentication(request: Request, response: Response, next: NextFunction) {
-	verifyToken(request, response);
 	if (!(<any>request).user) {
 		return sendErrorResponse(request, response, craftError("You are not authorised to access this resource.", 401));
 	}
