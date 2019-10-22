@@ -21,7 +21,7 @@ import packageJson from "../package.json";
 
 function endpoint(uri: string) {
 	const version = "v".concat(packageJson.version.split(".")[0]);
-	return "/api/".concat(version).concat("/").concat(uri);
+	return version.concat("/").concat(uri);
 }
 
 export const Services: ServicesType = {
