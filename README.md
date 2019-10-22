@@ -1,9 +1,14 @@
 <div align="center">
     <img src="/MyCashier.png" align="center" width="150" alt="MyCashier">
 
-    # MyCashier
+# MyCashier
+
+A full stack intuitive point of sales application.
 
 </div>
 
-**_MyCashier_** is a full stack intuitive point of sales application.
+## Stacks
 
+ * [Back-End](backend)
+ * Web
+ * Android
