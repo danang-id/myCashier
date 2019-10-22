@@ -22,24 +22,9 @@ import helmet from "helmet";
 
 import Controllers from "./controller";
 import Services from "./services";
-import { createErrorHandler, createRouter, sendErrorResponse, showLog } from "./helpers/express";
+import { createErrorHandler, createRouter, showLog } from "./helpers/express";
 import { createLogger } from "./helpers/logger";
 import { JWTConfig } from "./config/jwt.config";
-
-import {Model} from "./model/factory/mysql/Model"
-
-const Product = new Model("products");
-const Category = new Model("categories");
-
-const categoryID = "1";
-const category = Category.fetchByID(categoryID);
-if (!category) {
-	// sendErrorResponse()
-}
-Product.create({
-	name: "",
-	category_id: category.id
-});
 
 const app = express();
 const router = createRouter(app);
