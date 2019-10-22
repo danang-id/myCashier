@@ -1,7 +1,7 @@
 module.exports = {
 	apps: [
 		{
-			name: 'bcaf12-point-of-sales',
+			name: 'my-cashier-backend',
 			script: 'lib/app.js',
 			instances: 'max',
 			autorestart: true,
@@ -9,11 +9,11 @@ module.exports = {
 			max_memory_restart: '1G',
 			env: {
 				NODE_ENV: 'development',
-				DEBUG: 'bcaf12-point-of-sales:*'
+				DEBUG: 'my-cashier-backend:*'
 			},
 			env_production: {
 				NODE_ENV: 'production',
-				DEBUG: 'bcaf12-point-of-sales:*'
+				DEBUG: 'my-cashier-backend:*'
 			}
 		}
 	]

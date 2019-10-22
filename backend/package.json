@@ -1,18 +1,18 @@
 {
-	"name": "bcaf12-point-of-sales",
+	"name": "my-cashier-backend",
 	"version": "1.0.0",
-	"description": "Task Week 1 of Bootcamp Arkademy Faztrack batch 12: Point of Sales Back-End.",
-	"main": "index.js",
+	"description": "A full stack intuitive point of sales application. This package is the back-end.",
+	"main": "lib/app.js",
 	"repository": "https://gitlab.com/danang-id/bcaf12-point-of-sales",
 	"author": "Danang Galuh Tegar Prasetyo <danang.galuh.t@gmail.com> (https://gitlab.com/danang-id)",
 	"license": "Apache-2.0",
 	"private": true,
 	"scripts": {
 		"format": "prettier src/**/*.ts --config .prettierrc --write",
-		"dev": "DEBUG=bcaf12-point-of-sales:* babel-node src/app.ts --extensions '.ts'",
+		"dev": "DEBUG=my-cashier-backend:* babel-node src/app.ts --extensions '.ts'",
 		"dev:watch": "nodemon --exec npm run dev --ext 'ts'",
 		"build": "rimraf lib && babel src -d lib --extensions '.ts'",
-		"start": "DEBUG=bcaf12-point-of-sales:* node lib/app.js",
+		"start": "DEBUG=my-cashier-backend:* node lib/app.js",
 		"test": "mocha -r ts-node/register test/**/*.test.ts"
 	},
 	"dependencies": {
