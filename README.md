@@ -1,5 +1,7 @@
 <div align="center">
-    <img src="/MyCashier.png" align="center" width="150" alt="MyCashier">
+<a href="https://mycashier.pw/" target="blank">
+<img src="/MyCashier.png" align="center" width="150" alt="MyCashier">
+</a>
 
 # MyCashier
 
