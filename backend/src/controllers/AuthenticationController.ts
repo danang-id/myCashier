@@ -100,7 +100,7 @@ export class AuthenticationController {
 			user.given_name = body.given_name;
 			user.maiden_name = body.maiden_name;
 			user.email_address = body.email_address;
-			user.password = hashSync(body.password, 10 + Math.floor(Math.random() * 40));
+			user.password = hashSync(body.password, 10);
 			user = await this.manager.save(user);
 			let token = new Token();
 			token.user_id = user._id;
@@ -246,7 +246,7 @@ export class AuthenticationController {
 			if (body.password !== body.password_confirmation) {
 				throw new BadRequest('Your password did not match confirmation.');
 			}
-			user.password = hashSync(body.password, 10 + Math.floor(Math.random() * 40));
+			user.password = hashSync(body.password, 10);
 			user = await this.manager.save(user);
 			await this.manager.remove(Token, token);
 			await this.databaseService.commit()
