@@ -13,14 +13,19 @@
  * limitations under the License.
  */
 
-require('dotenv').config();
+import { expect } from 'chai';
+import { agent as request } from 'supertest';
 
-export const DatabaseConfig = {
-	type: process.env.DB_TYPE || 'mysql',
-	host: process.env.DB_HOST || 'localhost',
-	port: parseInt(process.env.DB_PORT || '3306'),
-	name: process.env.DB_NAME || 'test',
-	username: process.env.DB_USERNAME || 'root',
-	password: process.env.DB_PASSWORD,
-};
+import { Server } from '../src/Server';
 
+it('should GET /', async function () {
+	const response = await request(Server)
+		.get('/');
+	expect(response.status).to.equal(404);
+	expect(response.body).not.to.be.empty;
+	expect(response.body.success).not.to.be.empty;
+	expect(response.body.code).not.to.be.empty;
+	expect(response.body.code).to.equal(404);
+	expect(response.body.message).not.to.be.empty;
+	expect(response.body.data).to.be.empty;
+});

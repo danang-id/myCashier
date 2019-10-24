@@ -13,14 +13,28 @@
  * limitations under the License.
  */
 
-require('dotenv').config();
+import { Default, Property, Required, } from '@tsed/common';
+import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
+import uuid from 'uuid';
 
-export const DatabaseConfig = {
-	type: process.env.DB_TYPE || 'mysql',
-	host: process.env.DB_HOST || 'localhost',
-	port: parseInt(process.env.DB_PORT || '3306'),
-	name: process.env.DB_NAME || 'test',
-	username: process.env.DB_USERNAME || 'root',
-	password: process.env.DB_PASSWORD,
-};
+@Entity()
+@Unique(['_id'])
+export class Transaction {
 
+	@PrimaryColumn({ length: 36 })
+	@Default(uuid.v1())
+	_id: string = uuid.v1();
+
+	@Column({ length: 36 })
+	@Required()
+	user_id: string;
+
+	@CreateDateColumn({ type: 'timestamp' })
+	@Property()
+	created_at: Date;
+
+	@UpdateDateColumn({ type: 'timestamp' })
+	@Property()
+	updated_at: Date;
+
+}

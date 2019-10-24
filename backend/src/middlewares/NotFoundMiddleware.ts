@@ -13,14 +13,18 @@
  * limitations under the License.
  */
 
-require('dotenv').config();
+import { IMiddleware, Middleware, Req, $log, ResponseData } from '@tsed/common';
+import { NotFound } from 'ts-httpexceptions';
 
-export const DatabaseConfig = {
-	type: process.env.DB_TYPE || 'mysql',
-	host: process.env.DB_HOST || 'localhost',
-	port: parseInt(process.env.DB_PORT || '3306'),
-	name: process.env.DB_NAME || 'test',
-	username: process.env.DB_USERNAME || 'root',
-	password: process.env.DB_PASSWORD,
-};
+@Middleware()
+export class NotFoundMiddleware implements IMiddleware {
 
+	public use(@ResponseData() data: any, @Req() request: Req): void {
+		if (typeof data === 'undefined') {
+			throw new NotFound(
+				'The resource you\'re looking for at ' + request.method.toUpperCase() + ' ' + request.originalUrl + ' is not found.'
+			);
+		}
+	}
+
+}

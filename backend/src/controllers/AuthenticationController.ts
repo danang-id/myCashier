@@ -1,0 +1,110 @@
+/**
+ * Copyright 2019, Danang Galuh Tegar Prasetyo.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Controller, Post, Req } from '@tsed/common';
+import { Docs } from '@tsed/swagger';
+import { BadRequest, NotFound } from 'ts-httpexceptions';
+import { EntityManager } from 'typeorm';
+import { compareSync, hashSync } from 'bcrypt';
+import { sign } from 'jsonwebtoken';
+
+import { DatabaseService } from '../services/DatabaseService';
+import { ValidateRequest } from '../decorators/ValidateRequestDecorator';
+import { User } from '../model/User';
+import { PassportConfig } from '../config/passport.config';
+
+;
+
+@Controller('/')
+@Docs('api-v1')
+export class AuthenticationController {
+
+	private manager: EntityManager;
+
+	constructor(private databaseService: DatabaseService) {}
+
+	public $afterRoutesInit(): void {
+		this.manager = this.databaseService.getManager();
+	}
+
+	@Post('/sign-in')
+	@ValidateRequest({
+		body: ['email_address', 'password'],
+		useTrim: true
+	})
+	public async signIn(@Req() request: Req): Promise<{ token: string }> {
+		const body = {
+			email_address: request.body.email_address,
+			password: request.body.password
+		};
+		const user = await this.manager.findOne(User, {
+			email_address: body.email_address
+		});
+		if (typeof user === 'undefined') {
+			throw new BadRequest('Sign in failed! Please check your email address or password.');
+		}
+		if (compareSync(body.password, user.password)) {
+			throw new BadRequest('Sign in failed! Please check your email address or password.');
+		}
+		const { password, ...payload } = user;
+		const token = sign(payload, PassportConfig.jwt.secret);
+		return { token };
+	}
+
+	@Post('/register')
+	@ValidateRequest({
+		body: ['given_name', 'maiden_name', 'email_address', 'password', 'password_confirmation'],
+		useTrim: true
+	})
+	public async register(@Req() request: Req): Promise<string> {
+		const body = {
+			given_name: request.body.given_name,
+			maiden_name: request.body.maiden_name,
+			email_address: request.body.email_address,
+			password: request.body.password,
+			password_confirmation: request.body.password_confirmation
+		};
+		try {
+			await this.databaseService.startTransaction()
+			const emailRegExp = new RegExp(
+				/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+			);
+			if (!emailRegExp.test(body.email_address)) {
+				throw new BadRequest('Registration failed. Email address "' + body.email_address + '" is not a valid email address.')
+			}
+			let user = await this.manager.findOne(User, {
+				email_address: body.email_address
+			});
+			if (typeof user !== 'undefined') {
+				throw new BadRequest('User with email address ' + body.email_address + ' is already registered.');
+			}
+			if (body.password !== body.password_confirmation) {
+				throw new BadRequest('Your password did not match confirmation.');
+			}
+			user = new User();
+			user.given_name = body.given_name;
+			user.maiden_name = body.maiden_name;
+			user.email_address = body.email_address;
+			user.password = hashSync(body.password, 10 + Math.floor(Math.random() * 40));
+			await this.manager.save(user);
+			await this.databaseService.commit()
+			return 'You are successfully registered. Please sign in.';
+		} catch (error) {
+			await this.databaseService.rollback();
+			throw error;
+		}
+	}
+
+}

@@ -13,14 +13,20 @@
  * limitations under the License.
  */
 
-require('dotenv').config();
+import { $log, ServerLoader } from '@tsed/common';
+import { Server } from '../Server';
 
-export const DatabaseConfig = {
-	type: process.env.DB_TYPE || 'mysql',
-	host: process.env.DB_HOST || 'localhost',
-	port: parseInt(process.env.DB_PORT || '3306'),
-	name: process.env.DB_NAME || 'test',
-	username: process.env.DB_USERNAME || 'root',
-	password: process.env.DB_PASSWORD,
-};
+const config = require('dotenv').config();
 
+async function bootstrap() {
+	try {
+		$log.debug('Starting server...');
+		const server = await ServerLoader.bootstrap(Server, config);
+		await server.listen();
+		$log.debug('Server initialised.');
+	} catch (error) {
+		$log.error(error);
+	}
+}
+
+bootstrap();

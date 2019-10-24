@@ -6,6 +6,9 @@ lib
 keys/*
 !keys/.gitkeep
 
+data/*
+!data/.gitkeep
+
 .env
 .env.local
 .env.development.local

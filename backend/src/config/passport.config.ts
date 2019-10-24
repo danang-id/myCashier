@@ -1,5 +1,5 @@
 /**
- * Copyright 2019, Danang Galuh Tegar Prasetyo.
+ * Copyright 2019, Danang Galuh Tegar Prasetyo & Mokhamad Mustaqim.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,12 +15,10 @@
 
 require('dotenv').config();
 
-export const DatabaseConfig = {
-	type: process.env.DB_TYPE || 'mysql',
-	host: process.env.DB_HOST || 'localhost',
-	port: parseInt(process.env.DB_PORT || '3306'),
-	name: process.env.DB_NAME || 'test',
-	username: process.env.DB_USERNAME || 'root',
-	password: process.env.DB_PASSWORD,
+export const PassportConfig = {
+	strategy: process.env.AUTH_STRATEGY || 'jwt',
+	jwt: {
+		secret: process.env.AUTH_JWT_SECRET
+	}
 };
 
