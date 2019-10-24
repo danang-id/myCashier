@@ -1,5 +1,5 @@
 /**
- * Copyright 2019, Danang Galuh Tegar Prasetyo.
+ * Copyright 2019, Danang Galuh Tegar Prasetyo & Mokhamad Mustaqim.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +15,7 @@
 
 require('dotenv').config();
 
-export const ServerConfig = {
-	baseURL: process.env.BASE_URL || 'https://api.mycashier.pw/',
-	address: process.env.ADDRESS || '0.0.0.0',
-	port: process.env.PORT || '8000',
+export const MailConfig = {
+	sendGridKey: process.env.SENDGRID_API_KEY
 };
+

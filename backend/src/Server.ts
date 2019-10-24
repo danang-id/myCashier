@@ -27,8 +27,10 @@ import compress from 'compression';
 import methodOverride from 'method-override';
 import { json, urlencoded } from 'body-parser';
 import favicon from 'express-favicon';
+import SendGridMail from '@sendgrid/mail';
 
 import { DatabaseConfig } from './config/database.config';
+import { MailConfig } from './config/mail.config';
 import { ServerConfig } from './config/server.config';
 import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
 import { NotFoundMiddleware } from './middlewares/NotFoundMiddleware';
@@ -83,6 +85,7 @@ export class Server extends ServerLoader {
 		this.set('trust proxy', 1);
 		this.set('views', this.settings.get('viewsDir'));
 		this.engine('ejs', ejs);
+		SendGridMail.setApiKey(MailConfig.sendGridKey);
 	}
 
 	public $beforeRoutesInit(): void {
