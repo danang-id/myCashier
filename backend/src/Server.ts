@@ -116,6 +116,7 @@ export class Server extends ServerLoader {
 				secret: SessionConfig.secret,
 				store: new RedisStore({ client }),
 				resave: false,
+				saveUninitialized: true,
 				cookie: {
 					httpOnly: true,
 					secure: true,
