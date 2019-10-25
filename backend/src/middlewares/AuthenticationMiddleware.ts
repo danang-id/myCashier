@@ -55,6 +55,7 @@ export class AuthenticationMiddleware implements IMiddleware {
 				if (!user.is_activated) {
 					throw new Forbidden(`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`)
 				}
+				(<any>request).user = user;
 				(<any>response).user = user;
 			}
 		} catch (error) {
