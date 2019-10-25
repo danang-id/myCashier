@@ -122,7 +122,6 @@ export class Server extends ServerLoader {
 					secure: true,
 				},
 			}))
-			.use()
 			.use(cors({
 				origin: ServerConfig.cors.origin,
 				methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
