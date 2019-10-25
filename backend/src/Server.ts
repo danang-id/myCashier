@@ -121,8 +121,9 @@ export class Server extends ServerLoader {
 					secure: true,
 				},
 			}))
+			.use()
 			.use(cors({
-				origin: /\.mycashier\.pw$/,
+				origin: ServerConfig.cors.origin,
 				methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
 				credentials: true,
 				allowedHeaders: 'Content-Type, Authorization, X-Requested-With',

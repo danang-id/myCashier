@@ -19,4 +19,7 @@ export const ServerConfig = {
 	baseURL: process.env.BASE_URL || 'https://mycashier.pw/',
 	address: process.env.ADDRESS || '0.0.0.0',
 	port: process.env.PORT || '8000',
+	cors: {
+		origin: process.env.ORIGIN || /\.mycashier\.pw$/
+	}
 };
