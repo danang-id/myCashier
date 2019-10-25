@@ -30,16 +30,16 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 
 	public use(@ResponseData() data: any, @Res() response: Res) {
 
-		let message;
+		let message, token;
 
 		if (typeof (<any>response).user !== 'undefined') {
-			const token = sign((<any>response).user, PassportConfig.jwt.secret, {
+			token = sign((<any>response).user, PassportConfig.jwt.secret, {
 				expiresIn: '1h'
 			});
 			response.cookie('x-access-token', token, {
 				secure: true,
 				httpOnly: true,
-				domain: '.mycashier.pw',
+				// domain: '.mycashier.pw',
 				expires: new Date(Date.now() + 60 * 60 * 1000)
 			});
 		}
@@ -48,6 +48,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 			return response.json({
 				success: true,
 				code: 200,
+				token,
 				data
 			});
 		}
@@ -79,6 +80,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 			return response.json({
 				success: true,
 				code: 200,
+				token,
 				message: data
 			});
 		}
@@ -87,6 +89,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 			return response.json({
 				success: true,
 				code: 200,
+				token,
 				message,
 				data
 			});
@@ -95,6 +98,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		return response.json({
 			success: true,
 			code: 200,
+			token,
 			message,
 			data: this.converterService.serialize(data)
 		});
