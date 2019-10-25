@@ -33,6 +33,7 @@
 		"connect-redis": "^4.0.3",
 		"consolidate": "^0.15.1",
 		"cookie-parser": "^1.4.4",
+		"cookies-parser": "^1.2.0",
 		"cors": "^2.8.5",
 		"dotenv": "^8.2.0",
 		"ejs": "^2.7.1",

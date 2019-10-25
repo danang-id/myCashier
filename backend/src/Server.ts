@@ -29,6 +29,7 @@ import connectRedis from 'connect-redis';
 import cors from 'cors';
 import compress from 'compression';
 import methodOverride from 'method-override';
+import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'body-parser';
 import favicon from 'express-favicon';
 import SendGridMail from '@sendgrid/mail';
@@ -111,6 +112,13 @@ export class Server extends ServerLoader {
 					throw new TooManyRequests(`Too many request submitted from your IP address. Please try again after ${resetTime.getMinutes()} minutes ${resetTime.getSeconds()} seconds.`);
 				}
 			}))
+			.use(cors({
+				origin: ServerConfig.cors.origin,
+				methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
+				credentials: true,
+				allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
+			}))
+			.use(cookieParser())
 			.use(session({
 				name: SessionConfig.name,
 				secret: SessionConfig.secret,
@@ -121,12 +129,6 @@ export class Server extends ServerLoader {
 					httpOnly: true,
 					secure: true,
 				},
-			}))
-			.use(cors({
-				origin: ServerConfig.cors.origin,
-				methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
-				credentials: true,
-				allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
 			}))
 			.use(compress({}))
 			.use(methodOverride())
