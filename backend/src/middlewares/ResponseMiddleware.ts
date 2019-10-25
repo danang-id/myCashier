@@ -21,12 +21,28 @@ import {
 	ResponseData,
 	SendResponseMiddleware,
 } from '@tsed/common';
+import { sign } from 'jsonwebtoken';
+import { PassportConfig } from '../config/passport.config';
+import { CookieOptions } from 'express';
 
 @OverrideProvider(SendResponseMiddleware)
 export class ResponseMiddleware extends SendResponseMiddleware implements IMiddleware {
 
 	public use(@ResponseData() data: any, @Res() response: Res) {
+
 		let message;
+
+		if (typeof (<any>response).user !== 'undefined') {
+			const token = sign((<any>response).user, PassportConfig.jwt.secret, {
+				expiresIn: '1h'
+			});
+			response.cookie('x-access-token', token, {
+				secure: true,
+				httpOnly: true,
+				domain: '.mycashier.pw',
+				expires: new Date(Date.now() + 60 * 60 * 1000)
+			});
+		}
 
 		if (typeof data === 'undefined' || data === null) {
 			return response.json({

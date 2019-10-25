@@ -34,17 +34,17 @@ export class AuthenticationMiddleware implements IMiddleware {
 
 	public async use(
 		@Req() request: Req,
-		@Res() response: Res,
-		@EndpointInfo() endpoint: EndpointInfo
+		@Res() response: Res
 	): Promise<void> {
-		const options = endpoint.get(AuthenticationMiddleware) || {};
-		const tokenHeader = request.headers['x-access-token'] || request.headers['authorization'];
-		if (!tokenHeader) {
+		const requestToken = request.cookies['x-access-token'] ||
+			request.headers['authorization'] ||
+			request.headers['x-access-token'];
+		if (!requestToken) {
 			throw new Unauthorized('Authentication needed to access this resource.');
 		}
-		const tokenString = Array.isArray(tokenHeader)
-			? tokenHeader[0]
-			: String(tokenHeader);
+		const tokenString = Array.isArray(requestToken)
+			? requestToken[0]
+			: String(requestToken);
 		const token = tokenString.startsWith('Bearer ')
 			? tokenString.slice(7, tokenString.length)
 			: tokenString;
@@ -55,14 +55,17 @@ export class AuthenticationMiddleware implements IMiddleware {
 				if (!user.is_activated) {
 					throw new Forbidden(`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`)
 				}
-				(<any>request).user = user;
-				(<any>response).user = user;
+				(<any>request).user = payload;
+				(<any>response).user = payload;
 			}
 		} catch (error) {
-			if (error.message === 'invalid signature') {
-				error.message = 'The token you provided could not be proven authentic.'
+			if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+				error.message = 'Authentication failed. The token you provided could not be proven authentic.'
 			}
-			throw new Unauthorized('Authentication failed. ' + error.message);
+			if (error.name === 'TokenExpiredError') {
+				error.message = 'Your session has been expired. Please sign in again.';
+			}
+			throw new Unauthorized(error.message);
 		}
 		if (!(<any>request).user) {
 			throw new Unauthorized('You are not authenticated to access this resource.');

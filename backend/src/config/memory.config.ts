@@ -15,8 +15,11 @@
 
 require('dotenv').config();
 
-export const ServerConfig = {
-	baseURL: process.env.BASE_URL || 'https://mycashier.pw/',
-	address: process.env.ADDRESS || '0.0.0.0',
-	port: process.env.PORT || '8000',
+const redisHost = process.env.REDIS_HOST || '127.0.0.1';
+const redisPort = process.env.REDIS_PORT || '6379';
+
+export const MemoryConfig = {
+	redis: {
+		url: redisHost + ':' + redisPort
+	}
 };

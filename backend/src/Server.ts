@@ -23,6 +23,10 @@ import Path from 'path';
 import { ejs } from 'consolidate';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit'
+import session from 'express-session';
+import redis from 'redis';
+import connectRedis from 'connect-redis';
+import cors from 'cors';
 import compress from 'compression';
 import methodOverride from 'method-override';
 import { json, urlencoded } from 'body-parser';
@@ -36,6 +40,8 @@ import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
 import { NotFoundMiddleware } from './middlewares/NotFoundMiddleware';
 import { ResponseMiddleware } from './middlewares/ResponseMiddleware';
 import { TooManyRequests } from 'ts-httpexceptions';
+import { SessionConfig } from './config/session.config';
+import { MemoryConfig } from './config/memory.config';
 
 const rootDir = Path.resolve(__dirname);
 
@@ -89,6 +95,8 @@ export class Server extends ServerLoader {
 	}
 
 	public $beforeRoutesInit(): void {
+		const RedisStore = connectRedis(session);
+		const client = redis.createClient(MemoryConfig.redis.url);
 		this
 			.use(helmet())
 			.use(rateLimit({
@@ -102,6 +110,22 @@ export class Server extends ServerLoader {
 					}
 					throw new TooManyRequests(`Too many request submitted from your IP address. Please try again after ${resetTime.getMinutes()} minutes ${resetTime.getSeconds()} seconds.`);
 				}
+			}))
+			.use(session({
+				name: SessionConfig.name,
+				secret: SessionConfig.secret,
+				store: new RedisStore({ client }),
+				resave: false,
+				cookie: {
+					httpOnly: true,
+					secure: true,
+				},
+			}))
+			.use(cors({
+				origin: /\.mycashier\.pw$/,
+				methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
+				credentials: true,
+				allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
 			}))
 			.use(compress({}))
 			.use(methodOverride())

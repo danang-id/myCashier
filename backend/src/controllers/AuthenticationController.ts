@@ -13,18 +13,16 @@
  * limitations under the License.
  */
 
-import { Controller, Get, Post, Req } from '@tsed/common';
+import { Controller, Get, Post, Req, Res } from '@tsed/common';
 import { Docs } from '@tsed/swagger';
 import { BadRequest, NotFound } from 'ts-httpexceptions';
 import { EntityManager } from 'typeorm';
 import { compareSync, hashSync } from 'bcrypt';
-import { sign } from 'jsonwebtoken';
 import SendGridMail from '@sendgrid/mail';
 
 import { DatabaseService } from '../services/DatabaseService';
 import { ValidateRequest } from '../decorators/ValidateRequestDecorator';
 import { User } from '../model/User';
-import { PassportConfig } from '../config/passport.config';
 import { ServerConfig } from '../config/server.config';
 import { Token } from '../model/Token';
 
@@ -47,7 +45,7 @@ export class AuthenticationController {
 		body: ['email_address', 'password'],
 		useTrim: true
 	})
-	public async signIn(@Req() request: Req): Promise<{ token: string }> {
+	public async signIn(@Req() request: Req, @Res() response: Res): Promise<{ $message: string }> {
 		const body = {
 			email_address: request.body.email_address,
 			password: request.body.password
@@ -62,8 +60,9 @@ export class AuthenticationController {
 			throw new BadRequest('Sign in failed! Please check your email address or password.');
 		}
 		const { password, ...payload } = user;
-		const token = sign(payload, PassportConfig.jwt.secret);
-		return { token };
+		(<any>request).user = payload;
+		(<any>response).user = payload;
+		return { $message: `Welcome, ${ user.given_name }!` };
 	}
 
 	@Post('/register')

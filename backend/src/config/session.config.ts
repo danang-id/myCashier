@@ -15,8 +15,7 @@
 
 require('dotenv').config();
 
-export const ServerConfig = {
-	baseURL: process.env.BASE_URL || 'https://mycashier.pw/',
-	address: process.env.ADDRESS || '0.0.0.0',
-	port: process.env.PORT || '8000',
+export const SessionConfig = {
+	name: process.env.SESSION_NAME || 'MyCashier',
+	secret: process.env.SESSION_SECRET
 };
