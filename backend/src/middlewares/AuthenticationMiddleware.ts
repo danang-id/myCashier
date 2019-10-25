@@ -60,10 +60,10 @@ export class AuthenticationMiddleware implements IMiddleware {
 			}
 		} catch (error) {
 			if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
-				error.message = `Authentication failed. The token you provided could not be proven authentic. [${error.name}]`
+				error.message = `Authentication failed. The token you provided could not be proven authentic. [${error.name}|${error.message}]`
 			}
 			if (error.name === 'TokenExpiredError') {
-				error.message = `Your session has been expired. Please sign in again. [${error.name}]`;
+				error.message = `Your session has been expired. Please sign in again. [${error.name}|${error.message}]`;
 			}
 			throw new Unauthorized(error.message);
 		}
