@@ -20,6 +20,6 @@ const redisPort = process.env.REDIS_PORT || '6379';
 
 export const MemoryConfig = {
 	redis: {
-		url: redisHost + ':' + redisPort
+		url: '//' + redisHost + ':' + redisPort
 	}
 };
