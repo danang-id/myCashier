@@ -194,7 +194,7 @@ export class AuthenticationController {
 			let token = new Token();
 			token.user_id = user._id;
 			token = await this.manager.save(token);
-			const recoverLink = ServerConfig.baseURL + `activate?email_address=${user.email_address}&token=${token._id}`
+			const recoverLink = ServerConfig.baseURL + `recover?email_address=${user.email_address}&token=${token._id}`
 			const message = {
 				to: user.email_address,
 				from: 'noreply@mycashier.pw',
@@ -209,7 +209,7 @@ export class AuthenticationController {
 `,
 			};
 			await SendGridMail.send(message);
-			await this.databaseService.commit()
+			await this.databaseService.commit();
 			return 'A recovery email has been sent to your email address. Please check your email inbox to recover your account.';
 		} catch (error) {
 			await this.databaseService.rollback();
