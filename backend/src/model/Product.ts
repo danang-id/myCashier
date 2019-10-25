@@ -47,8 +47,8 @@ export class Product {
 
 	@Column()
 	@Required()
-	@Default(0)
-	stock: number = 0;
+	@Default(100)
+	stock: number = 100;
 
 	@CreateDateColumn({ type: 'timestamp' })
 	@Property()
