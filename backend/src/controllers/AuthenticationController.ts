@@ -58,7 +58,7 @@ export class AuthenticationController {
 		if (typeof user === 'undefined') {
 			throw new BadRequest('Sign in failed! Please check your email address or password.');
 		}
-		if (compareSync(body.password, user.password)) {
+		if (!compareSync(body.password, user.password)) {
 			throw new BadRequest('Sign in failed! Please check your email address or password.');
 		}
 		const { password, ...payload } = user;
