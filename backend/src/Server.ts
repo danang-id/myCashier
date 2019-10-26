@@ -100,18 +100,18 @@ export class Server extends ServerLoader {
 		const client = redis.createClient(MemoryConfig.redis.url);
 		this
 			.use(helmet())
-			.use(rateLimit({
-				windowMs: 60 * 60 * 1000,
-				max: 100,
-				handler(request) {
-					const now = new Date();
-					const resetTime = !!(<any>request).resetTime ? <Date> (<any>request).resetTime : now;
-					if (resetTime.getTime() === now.getTime()) {
-						resetTime.setTime(resetTime.getTime() + 60 * 60 * 1000);
-					}
-					throw new TooManyRequests(`Too many request submitted from your IP address. Please try again after ${resetTime.getMinutes()} minutes ${resetTime.getSeconds()} seconds.`);
-				}
-			}))
+			// .use(rateLimit({
+			// 	windowMs: 60 * 60 * 1000,
+			// 	max: 100,
+			// 	handler(request) {
+			// 		const now = new Date();
+			// 		const resetTime = !!(<any>request).resetTime ? <Date> (<any>request).resetTime : now;
+			// 		if (resetTime.getTime() === now.getTime()) {
+			// 			resetTime.setTime(resetTime.getTime() + 60 * 60 * 1000);
+			// 		}
+			// 		throw new TooManyRequests(`Too many request submitted from your IP address. Please try again after ${resetTime.getMinutes()} minutes ${resetTime.getSeconds()} seconds.`);
+			// 	}
+			// }))
 			.use(cors({
 				origin: ServerConfig.cors.origin,
 				methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
@@ -119,18 +119,18 @@ export class Server extends ServerLoader {
 				allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
 			}))
 			.use(cookieParser())
-			.use(session({
-				name: SessionConfig.name,
-				secret: SessionConfig.secret,
-				store: new RedisStore({ client }),
-				resave: false,
-				saveUninitialized: true,
-				cookie: {
-					httpOnly: true,
-					secure: true,
-				},
-			}))
-			.use(compress({}))
+			// .use(session({
+			// 	name: SessionConfig.name,
+			// 	secret: SessionConfig.secret,
+			// 	store: new RedisStore({ client }),
+			// 	resave: false,
+			// 	saveUninitialized: true,
+			// 	cookie: {
+			// 		httpOnly: true,
+			// 		secure: true,
+			// 	},
+			// }))
+			// .use(compress({}))
 			.use(methodOverride())
 			.use(json())
 			.use(urlencoded({
