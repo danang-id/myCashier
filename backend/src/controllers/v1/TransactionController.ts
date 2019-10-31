@@ -63,13 +63,18 @@ export class TransactionController {
 			transaction_id: transaction._id
 		});
 		responseObject.products = [];
+		const productPromises = [];
 		for (const productTransaction of productTransactions) {
-			const quantity = productTransaction.quantity;
-			const product = await this.manager.findOne(Product, productTransaction.product_id);
-			responseObject.products.push({
+			responseObject.products.push(productTransaction.quantity);
+			productPromises.push(this.manager.findOne(Product, productTransaction.product_id));
+		}
+		const products = await Promise.all(productPromises);
+		for (const [index,product] of products.entries()) {
+			const quantity = responseObject.products[index];
+			responseObject.products[index] = {
 				...product,
-				quantity,
-			});
+				quantity
+			}
 		}
 		return responseObject;
 	}
@@ -134,8 +139,12 @@ export class TransactionController {
 			}
 			productTransaction.quantity = productTransaction.quantity + body.value;
 			product.stock = product.stock - body.value;
-			productTransaction = await this.manager.save(productTransaction);
-			product = await this.manager.save(product);
+			const result = await Promise.all([
+				this.manager.save(productTransaction),
+				this.manager.save(product)
+			]);
+			productTransaction = result[0];
+			product = result[1];
 			await this.databaseService.commit();
 			return {
 				$data: productTransaction,
@@ -190,8 +199,12 @@ export class TransactionController {
 			}
 			productTransaction.quantity = productTransaction.quantity - body.value;
 			product.stock = product.stock + body.value;
-			productTransaction = await this.manager.save(productTransaction);
-			product = await this.manager.save(product);
+			const result = await Promise.all([
+				this.manager.save(productTransaction),
+				this.manager.save(product)
+			]);
+			productTransaction = result[0];
+			product = result[1];
 			await this.databaseService.commit();
 			return {
 				$data: productTransaction,

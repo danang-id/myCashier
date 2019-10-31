@@ -15,7 +15,7 @@
 
 import { Controller, Get, Post, Req, Res } from '@tsed/common';
 import { Docs } from '@tsed/swagger';
-import { BadRequest, NotFound } from 'ts-httpexceptions';
+import { BadRequest, Forbidden, NotFound } from 'ts-httpexceptions';
 import { EntityManager } from 'typeorm';
 import { compareSync, hashSync } from 'bcrypt';
 import SendGridMail from '@sendgrid/mail';
@@ -58,6 +58,9 @@ export class AuthenticationController {
 		}
 		if (!compareSync(body.password, user.password)) {
 			throw new BadRequest('Sign in failed! Please check your email address or password.');
+		}
+		if (!user.is_activated) {
+			throw new BadRequest(`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`)
 		}
 		const { password, ...payload } = user;
 		(<any>request).user = payload;
@@ -139,19 +142,27 @@ export class AuthenticationController {
 		};
 		try {
 			await this.databaseService.startTransaction();
-			let user = await this.manager.findOne(User, {
-				email_address: body.email_address
-			});
+			let [user, token] = await Promise.all([
+				this.manager.findOne(User, {
+					email_address: body.email_address
+				}),
+				this.manager.findOne(Token, body.token)
+			]);
 			if (typeof user === 'undefined') {
 				throw new BadRequest('There is no account registered with email address ' + body.email_address + '.');
 			}
-			let token = await this.manager.findOne(Token, body.token);
+			if (user.is_activated) {
+				throw new BadRequest('User account with email address ' + body.email_address + ' has already been activated.');
+			}
 			if (typeof token === 'undefined' || token.user_id !== user._id) {
 				throw new BadRequest('Your activation token is invalid. Please re-check your activation link!');
 			}
 			user.is_activated = true;
-			user = await this.manager.save(user);
-			await this.manager.remove(Token, token);
+			const result = await Promise.all([
+				this.manager.save(user),
+				this.manager.remove(Token, token)
+			]);
+			user = result[0];
 			const message = {
 				to: user.email_address,
 				from: 'noreply@mycashier.pw',
@@ -166,7 +177,7 @@ export class AuthenticationController {
 `,
 			};
 			await SendGridMail.send(message);
-			await this.databaseService.commit()
+			await this.databaseService.commit();
 			return 'Your account has been successfully activated. You now may sign in to enjoy our services.';
 		} catch (error) {
 			await this.databaseService.rollback();
@@ -190,6 +201,9 @@ export class AuthenticationController {
 			});
 			if (typeof user === 'undefined') {
 				throw new BadRequest('There is no account registered with email address ' + body.email_address + '.');
+			}
+			if (!user.is_activated) {
+				throw new BadRequest(`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`)
 			}
 			let token = new Token();
 			token.user_id = user._id;
@@ -232,13 +246,15 @@ export class AuthenticationController {
 		};
 		try {
 			await this.databaseService.startTransaction();
-			let user = await this.manager.findOne(User, {
-				email_address: body.email_address
-			});
+			let [user, token] = await Promise.all([
+				this.manager.findOne(User, {
+					email_address: body.email_address
+				}),
+				this.manager.findOne(Token, body.token)
+			]);
 			if (typeof user === 'undefined') {
 				throw new BadRequest('There is no account registered with email address ' + body.email_address + '.');
 			}
-			let token = await this.manager.findOne(Token, body.token);
 			if (typeof token === 'undefined' || token.user_id !== user._id) {
 				throw new BadRequest('Your recovery token is invalid. Please re-check your activation link!');
 			}
@@ -246,9 +262,11 @@ export class AuthenticationController {
 				throw new BadRequest('Your password did not match confirmation.');
 			}
 			user.password = hashSync(body.password, 10);
-			user = await this.manager.save(user);
-			await this.manager.remove(Token, token);
-			await this.databaseService.commit()
+			await Promise.all([
+				this.manager.save(user),
+				this.manager.remove(Token, token)
+			]);
+			await this.databaseService.commit();
 			return 'Your account has been successfully recovered. You now may sign in with newly created passwords.';
 		} catch (error) {
 			await this.databaseService.rollback();

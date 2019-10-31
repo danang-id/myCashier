@@ -47,6 +47,7 @@ export class ProductController {
 			page: request.query.page,
 			page_by: request.query.page_by,
 			sort_by: request.query.sort_by,
+			sort_method: request.query.sort_method
 		};
 		let products = await this.manager.find(Product);
 		// Process search query
@@ -67,7 +68,7 @@ export class ProductController {
 		}
 		// Sort search results
 		if (!!query.sort_by) {
-			let sortMethod = 1;
+			let sortMethod = !!query.sort_method ? parseInt(query.sort_method) : 1;
 			if (query.sort_by === 'name' || query.sort_by === 'updated_at') {
 				products = products.sort((a, b) => {
 					return a[query.sort_by] > b[query.sort_by]
@@ -128,6 +129,7 @@ export class ProductController {
 			image: request.body.image,
 			price: request.body.price,
 			category_id: request.body.category_id,
+			stock: request.body.stock
 		};
 		try {
 			await this.databaseService.startTransaction();
@@ -141,6 +143,7 @@ export class ProductController {
 			product.image = body.image;
 			product.price = body.price;
 			product.category_id = category._id;
+			product.stock = body.stock || 0;
 			product = await this.manager.save(product);
 			await this.databaseService.commit();
 			return { $data: product, $message: 'Successfully created product "' + product.name + '".' };
@@ -167,6 +170,7 @@ export class ProductController {
 			image: request.body.image,
 			price: request.body.price,
 			category_id: request.body.category_id,
+			stock: request.body.stock
 		};
 		try {
 			await this.databaseService.startTransaction();
@@ -183,6 +187,7 @@ export class ProductController {
 			product.image = body.image;
 			product.price = body.price;
 			product.category_id = category._id;
+			product.stock = body.stock || 0;
 			product = await this.manager.save(product);
 			await this.databaseService.commit();
 			return { $data: product, $message: 'Successfully replaced product to "' + product.name + '".' };
@@ -200,14 +205,15 @@ export class ProductController {
 	@UseAuth(AuthenticationMiddleware)
 	public async modify(@Req() request): Promise<{ $data: Product, $message: string }> {
 		const query = {
-			_id: request.query._id.trim(),
+			_id: request.query._id,
 		};
 		const body = {
-			name: request.body.name.trim(),
-			description: request.body.description.trim(),
-			image: request.body.image.trim(),
-			price: request.body.price.trim(),
-			category_id: request.body.category_id.trim(),
+			name: request.body.name,
+			description: request.body.description,
+			image: request.body.image,
+			price: request.body.price,
+			category_id: request.body.category_id,
+			stock: request.body.stock
 		};
 		try {
 			await this.databaseService.startTransaction();
@@ -224,6 +230,7 @@ export class ProductController {
 			product.image = body.image || product.image;
 			product.price = body.price || product.price;
 			product.category_id = category._id;
+			product.stock = body.stock || product.stock;
 			product = await this.manager.save(product);
 			await this.databaseService.commit();
 			return { $data: product, $message: 'Successfully modified product to "' + product.name + '".' };
