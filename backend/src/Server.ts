@@ -119,18 +119,18 @@ export class Server extends ServerLoader {
 				allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
 			}))
 			.use(cookieParser())
-			// .use(session({
-			// 	name: SessionConfig.name,
-			// 	secret: SessionConfig.secret,
-			// 	store: new RedisStore({ client }),
-			// 	resave: false,
-			// 	saveUninitialized: true,
-			// 	cookie: {
-			// 		httpOnly: true,
-			// 		secure: true,
-			// 	},
-			// }))
-			// .use(compress({}))
+			.use(session({
+				name: SessionConfig.name,
+				secret: SessionConfig.secret,
+				store: new RedisStore({ client }),
+				resave: false,
+				saveUninitialized: true,
+				cookie: {
+					httpOnly: true,
+					secure: true,
+				},
+			}))
+			.use(compress({}))
 			.use(methodOverride())
 			.use(json())
 			.use(urlencoded({
