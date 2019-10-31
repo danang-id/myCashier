@@ -16,13 +16,14 @@
 import { isBoolean, isNumber, isObject, isStream, isString } from '@tsed/core';
 import {
 	IMiddleware,
-	OverrideProvider,
+	OverrideProvider, Req,
 	Res,
 	ResponseData,
 	SendResponseMiddleware,
 } from '@tsed/common';
 import { sign } from 'jsonwebtoken';
 import { PassportConfig } from '../config/passport.config';
+import { ServerConfig } from '../config/server.config';
 
 @OverrideProvider(SendResponseMiddleware)
 export class ResponseMiddleware extends SendResponseMiddleware implements IMiddleware {
@@ -31,23 +32,31 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 
 		let message, token;
 
+		const cookieName = 'x-access-token';
+		const cookieOptions = {
+			secure: true,
+			httpOnly: true,
+			domain: `.${ ServerConfig.productionURL }`,
+			expires: new Date(Date.now() + 60 * 60 * 1000)
+		};
+
 		if (typeof (<any>response).user !== 'undefined') {
 			token = sign((<any>response).user, PassportConfig.jwt.secret);
-			response.cookie('x-access-token', token, {
-				secure: true,
-				httpOnly: true,
-				domain: '.mycashier.pw',
-				expires: new Date(Date.now() + 60 * 60 * 1000)
-			});
 		}
 
 		if (typeof data === 'undefined' || data === null) {
-			return response.json({
-				success: true,
-				code: 200,
-				token,
-				data
-			});
+			return typeof token !== 'undefined'
+				? response.cookie(cookieName, token, cookieOptions).json({
+					success: true,
+					code: 200,
+					token,
+					data
+				})
+				: response.json({
+					success: true,
+					code: 200,
+					data
+				});
 		}
 
 		if (isStream(data)) {
@@ -56,7 +65,9 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		}
 
 		if (isString(data.$rendered)) {
-			return response.send(data.$rendered);
+			return typeof token !== 'undefined'
+				? response.cookie(cookieName, token, cookieOptions).send(data.$rendered)
+				: response.send(data.$rendered);
 		}
 
 		if (isString(data.$message)) {
@@ -74,31 +85,51 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		}
 
 		if (isString(data)) {
-			return response.json({
-				success: true,
-				code: 200,
-				token,
-				message: data
-			});
+			return typeof token !== 'undefined'
+				? response.cookie(cookieName, token, cookieOptions).json({
+					success: true,
+					code: 200,
+					token,
+					message: data
+				})
+				: response.json({
+					success: true,
+					code: 200,
+					message: data
+				});
 		}
 
 		if (isBoolean(data) || isNumber(data)) {
-			return response.json({
+			return typeof token !== 'undefined'
+				? response.cookie(cookieName, token, cookieOptions).json({
+					success: true,
+					code: 200,
+					token,
+					message,
+					data
+				})
+				: response.json({
+					success: true,
+					code: 200,
+					message,
+					data
+				});
+		}
+
+		return typeof token !== 'undefined'
+			? response.cookie(cookieName, token, cookieOptions).json({
 				success: true,
 				code: 200,
 				token,
 				message,
-				data
+				data: this.converterService.serialize(data)
+			})
+			: response.json({
+				success: true,
+				code: 200,
+				message,
+				data: this.converterService.serialize(data)
 			});
-		}
-
-		return response.json({
-			success: true,
-			code: 200,
-			token,
-			message,
-			data: this.converterService.serialize(data)
-		});
 	}
 
 }

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { ServerLoader, ServerSettings, $log } from '@tsed/common';
+import { ServerLoader, ServerSettings, $log, Req, Res, Next } from '@tsed/common';
 import '@tsed/typeorm';
 import '@tsed/swagger';
 import '@tsed/ajv';
@@ -112,12 +112,13 @@ export class Server extends ServerLoader {
 			// 		throw new TooManyRequests(`Too many request submitted from your IP address. Please try again after ${resetTime.getMinutes()} minutes ${resetTime.getSeconds()} seconds.`);
 			// 	}
 			// }))
-			.use(cors({
-				origin: ServerConfig.cors.origin,
-				methods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
-				credentials: true,
-				allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
-			}))
+			.use((request: Req, response: Res, next: Next) => {
+				response.header('Access-Control-Allow-Credentials', 'true');
+				response.header('Access-Control-Allow-Origin', request.headers.origin || ServerConfig.productionURL);
+				response.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
+				response.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+				next();
+			})
 			.use(cookieParser())
 			.use(session({
 				name: SessionConfig.name,
