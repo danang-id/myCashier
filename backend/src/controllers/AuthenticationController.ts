@@ -278,7 +278,7 @@ export class AuthenticationController {
 	}
 
 	@Post('/sign-out')
-	public async signOut(@Res() response: Res): Promise<string> {
+	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {
 		const cookieOptions: CookieOptions = {
 			secure: true,
 			httpOnly: true,
@@ -286,6 +286,7 @@ export class AuthenticationController {
 			sameSite: 'none'
 		};
 		response.clearCookie('x-access-token', cookieOptions);
+		(<any>request).user = null;
 		return 'Successfully signed out. Thank you for using MyCashier!';
 	}
 

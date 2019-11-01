@@ -42,7 +42,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 			sameSite: 'none'
 		};
 
-		if (typeof (<any>response).user !== 'undefined') {
+		if (typeof (<any>response).user !== 'undefined' && (<any>response).user !== null) {
 			token = sign((<any>response).user, PassportConfig.jwt.secret);
 			response.cookie(cookieName, token, cookieOptions)
 		}
