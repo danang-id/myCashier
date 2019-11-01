@@ -122,9 +122,7 @@ export class Server extends ServerLoader {
 					}
 				}
 				const protocol = origin.match(/^[^:]+/)[0];
-				const hostname = protocol === 'https'
-					? origin.substring(8).match(/^[^:]+/)[0]
-					: origin.substring(7).match(/^[^:]+/)[0];
+				const hostname = protocol === 'https' ? origin.substring(8) : origin.substring(7);
 				(<any>response).crossOrigin = {
 					origin, protocol, hostname
 				};
