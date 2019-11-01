@@ -36,7 +36,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		const cookieOptions = {
 			secure: true,
 			httpOnly: true,
-			domain: `.${ ServerConfig.productionURL }`,
+			domain: `.${ (<any>response).requestHost || ServerConfig.productionURL }`,
 			expires: new Date(Date.now() + 60 * 60 * 1000)
 		};
 
