@@ -125,9 +125,9 @@ export class Server extends ServerLoader {
 				saveUninitialized: false,
 				cookie: {
 					maxAge: 60 * 60 * 1000,
+					sameSite: 'none',
 					httpOnly: true,
 					secure: true,
-					sameSite: false
 				},
 
 			}))
