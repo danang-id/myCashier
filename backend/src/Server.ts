@@ -20,6 +20,7 @@ import '@tsed/swagger';
 import '@tsed/ajv';
 import '@tsed/multipartfiles';
 
+import fs from 'fs';
 import Path from 'path';
 import { ejs } from 'consolidate';
 import helmet from 'helmet';
@@ -46,8 +47,12 @@ const rootDir = Path.resolve(__dirname);
 
 @ServerSettings({
 	rootDir,
-	httpPort: ServerConfig.address + ':' + ServerConfig.port,
-	httpsPort: false,
+	httpPort: ServerConfig.address + ':' + (+ServerConfig.port + 1),
+	httpsPort: ServerConfig.address + ':' + ServerConfig.port,
+	httpsOptions: {
+		key: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.key')),
+		cert: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.cert'))
+	},
 	viewsDir: `${rootDir}/views`,
 	mount: {
 		'/': `${rootDir}/controllers/*{.ts,.js}`,
