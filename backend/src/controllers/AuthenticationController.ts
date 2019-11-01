@@ -45,7 +45,10 @@ export class AuthenticationController {
 		body: ['email_address', 'password'],
 		useTrim: true
 	})
-	public async signIn(@Req() request: Req, @Res() response: Res): Promise<{ $message: string }> {
+	public async signIn(@Req() request: Req, @Res() response: Res): Promise<{
+		$message: string,
+		$data: { token: string }
+	}> {
 		const body = {
 			email_address: request.body.email_address,
 			password: request.body.password
@@ -66,7 +69,7 @@ export class AuthenticationController {
 		(<any>request).user = payload;
 		(<any>response).user = payload;
 		request.session.token = sign(payload, PassportConfig.jwt.secret);
-		return { $message: `Welcome, ${ user.given_name }!` };
+		return { $message: `Welcome, ${ user.given_name }!`, $data: { token: request.session.token } };
 	}
 
 	@Post('/register')

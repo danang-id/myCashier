@@ -38,6 +38,7 @@ export class AuthenticationMiddleware implements IMiddleware {
 	): Promise<void> {
 		console.log('Check', request.session.token);
 		const requestToken = request.session.token ||
+			request.cookies['x-access-token'] ||
 			request.headers['authorization'] ||
 			request.headers['x-access-token'];
 		if (!requestToken) {
