@@ -278,16 +278,17 @@ export class AuthenticationController {
 	}
 
 	@Post('/sign-out')
-	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {
+	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {const { protocol, hostname } = (<any>response).crossOrigin;
 		const cookieOptions: CookieOptions = {
-			domain: `${ (<any>response).requestHostname || ServerConfig.productionURL }`,
-			secure: (<any>response).requestHostname !== 'localhost',
+			domain: '.'.concat(hostname),
+			secure: protocol === 'https',
 			httpOnly: true,
 			sameSite: 'None'
 		};
 		response.clearCookie('x-access-token', cookieOptions);
+		const { given_name } = (<any>request).user;
 		(<any>request).user = null;
-		return 'Successfully signed out. Thank you for using MyCashier!';
+		return `See you again, ${ given_name }.Thank you for using MyCashier!`;
 	}
 
 }

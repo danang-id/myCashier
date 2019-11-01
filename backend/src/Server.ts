@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { ServerLoader, ServerSettings, $log, Req, Res, Next } from '@tsed/common';
+import { isArray, isString } from '@tsed/core';
+import { ServerLoader, ServerSettings, Req, Res, Next } from '@tsed/common';
 import '@tsed/typeorm';
 import '@tsed/swagger';
 import '@tsed/ajv';
@@ -26,7 +27,6 @@ import rateLimit from 'express-rate-limit'
 import session from 'express-session';
 import redis from 'redis';
 import connectRedis from 'connect-redis';
-import cors from 'cors';
 import compress from 'compression';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
@@ -113,10 +113,21 @@ export class Server extends ServerLoader {
 			// 	}
 			// }))
 			.use((request: Req, response: Res, next: Next) => {
-				console.log(request.headers.host, request.hostname, request.originalUrl, request.headers.origin);
-				(<any>response).requestHostname = request.hostname;
+				let origin = 'https://'.concat(ServerConfig.productionURL);
+				if (!!request.headers.origin) {
+					if (isArray(request.headers.origin) && request.headers.origin.length > 0) {
+						origin = <string> request.headers.origin[0];
+					} else if (isString(request.headers.origin)) {
+						origin = <string> request.headers.origin;
+					}
+				}
+				const protocol = origin.match(/^[^:]+/)[0];
+				const hostname = protocol === 'https' ? origin.substring(8) : origin.substring(7);
+				(<any>response).crossOrigin = {
+					origin, protocol, hostname
+				};
 				response.header('Access-Control-Allow-Credentials', 'true');
-				response.header('Access-Control-Allow-Origin', request.headers.origin || ServerConfig.productionURL);
+				response.header('Access-Control-Allow-Origin', origin);
 				response.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
 				response.header(
 					'Access-Control-Allow-Headers',
