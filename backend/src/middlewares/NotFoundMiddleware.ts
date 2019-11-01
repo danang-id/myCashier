@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { IMiddleware, Middleware, Req, $log, ResponseData } from '@tsed/common';
+import { IMiddleware, Middleware, Req, ResponseData } from '@tsed/common';
 import { NotFound } from 'ts-httpexceptions';
 
 @Middleware()

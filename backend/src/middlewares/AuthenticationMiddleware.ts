@@ -36,6 +36,7 @@ export class AuthenticationMiddleware implements IMiddleware {
 		@Req() request: Req,
 		@Res() response: Res
 	): Promise<void> {
+		console.log('Check', request.session.token);
 		const requestToken = request.session.token ||
 			request.headers['authorization'] ||
 			request.headers['x-access-token'];

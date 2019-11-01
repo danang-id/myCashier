@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { Controller, Get, Post, Req, Res } from '@tsed/common';
+import { Controller, Post, Req, Res } from '@tsed/common';
 import { Docs } from '@tsed/swagger';
-import { BadRequest, Forbidden, NotFound } from 'ts-httpexceptions';
+import { BadRequest } from 'ts-httpexceptions';
 import { EntityManager } from 'typeorm';
 import { compareSync, hashSync } from 'bcrypt';
 import SendGridMail from '@sendgrid/mail';
@@ -25,11 +25,8 @@ import { ValidateRequest } from '../decorators/ValidateRequestDecorator';
 import { User } from '../model/User';
 import { ServerConfig } from '../config/server.config';
 import { Token } from '../model/Token';
-import { CookieOptions } from 'express';
 import { sign } from 'jsonwebtoken';
 import { PassportConfig } from '../config/passport.config';
-
-;
 
 @Controller('/')
 @Docs('api-v1')
@@ -68,6 +65,7 @@ export class AuthenticationController {
 		const { password, ...payload } = user;
 		(<any>request).user = payload;
 		(<any>response).user = payload;
+		request.session.token = sign(payload, PassportConfig.jwt.secret);
 		return { $message: `Welcome, ${ user.given_name }!` };
 	}
 
@@ -280,9 +278,7 @@ export class AuthenticationController {
 	@Post('/sign-out')
 	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {
 		request.session.token = void 0;
-		request.session.destroy(() => {
-			request.session.regenerate(() => {});
-		});
+		request.session.destroy(() => {});
 		(<any>request).user = null;
 		return `See you again. Thank you for using MyCashier!`;
 	}

@@ -26,8 +26,8 @@ import { ejs } from 'consolidate';
 import helmet from 'helmet';
 // import rateLimit from 'express-rate-limit'
 import session from 'express-session';
-// import redis from 'redis';
-// import connectRedis from 'connect-redis';
+import redis from 'redis';
+import connectRedis from 'connect-redis';
 import compress from 'compression';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
@@ -38,12 +38,11 @@ import SendGridMail from '@sendgrid/mail';
 import { DatabaseConfig } from './config/database.config';
 import { MailConfig } from './config/mail.config';
 import { ServerConfig } from './config/server.config';
-import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
+import { SessionConfig } from './config/session.config';
+import { MemoryConfig } from './config/memory.config';
 import { NotFoundMiddleware } from './middlewares/NotFoundMiddleware';
 import { ResponseMiddleware } from './middlewares/ResponseMiddleware';
-import { SessionConfig } from './config/session.config';
-// import { MemoryConfig } from './config/memory.config';
-import { RegenerateTokenMiddleware } from './middlewares/RegenerateTokenMiddleware';
+import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
 
 const rootDir = Path.resolve(__dirname);
 
@@ -97,8 +96,8 @@ export class Server extends ServerLoader {
 	}
 
 	public $beforeRoutesInit(): void {
-		// const RedisStore = connectRedis(session);
-		// const client = redis.createClient(MemoryConfig.redis.url);
+		const RedisStore = connectRedis(session);
+		const client = redis.createClient(MemoryConfig.redis.url);
 		this
 			.use(helmet())
 			// .use(rateLimit({
@@ -135,16 +134,16 @@ export class Server extends ServerLoader {
 			.use(session({
 				name: SessionConfig.name,
 				secret: SessionConfig.secret,
-				// store: new RedisStore({ client }),
-				resave: false,
+				store: new RedisStore({ client }),
+				resave: true,
 				saveUninitialized: true,
-				cookie: {
-					domain: '.mycashier.pw',
-					maxAge: 60 * 60 * 1000,
-					secure: true,
-					httpOnly: true,
-					sameSite: 'Lax'
-				},
+				// cookie: {
+				// 	domain: '.mycashier.pw',
+				// 	maxAge: 60 * 60 * 1000,
+				// 	secure: true,
+				// 	httpOnly: true,
+				// 	sameSite: 'Lax'
+				// },
 			}))
 			.use(compress({}))
 			.use(methodOverride())
@@ -156,8 +155,7 @@ export class Server extends ServerLoader {
 	}
 
 	public $afterRoutesInit(): void {
-		this.use(RegenerateTokenMiddleware)
-			.use(NotFoundMiddleware)
+		this.use(NotFoundMiddleware)
 			.use(ResponseMiddleware)
 			.use(ErrorHandlerMiddleware)
 	}
