@@ -116,7 +116,10 @@ export class Server extends ServerLoader {
 				name: SessionConfig.name,
 				secret: SessionConfig.secret,
 				httpOnly: true,
-				sameSite: false,
+				secure: true,
+				secureProxy: true,
+				sameSite: 'lax',
+				domain: '.mycashier.pw',
 				maxAge: 60 * 60 * 1000
 			}))
 			.use(compress({}))
