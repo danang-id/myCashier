@@ -43,6 +43,7 @@ import { ResponseMiddleware } from './middlewares/ResponseMiddleware';
 import { TooManyRequests } from 'ts-httpexceptions';
 import { SessionConfig } from './config/session.config';
 import { MemoryConfig } from './config/memory.config';
+import { RegenerateTokenMiddleware } from './middlewares/RegenerateTokenMiddleware';
 
 const rootDir = Path.resolve(__dirname);
 
@@ -121,11 +122,6 @@ export class Server extends ServerLoader {
 						origin = <string> request.headers.origin;
 					}
 				}
-				const protocol = origin.match(/^[^:]+/)[0];
-				const hostname = protocol === 'https' ? origin.substring(8) : origin.substring(7);
-				(<any>response).crossOrigin = {
-					origin, protocol, hostname
-				};
 				response.header('Access-Control-Allow-Credentials', 'true');
 				response.header('Access-Control-Allow-Origin', origin);
 				response.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
@@ -143,8 +139,11 @@ export class Server extends ServerLoader {
 				resave: false,
 				saveUninitialized: true,
 				cookie: {
-					httpOnly: true,
+					domain: '.mycashier.pw',
+					maxAge: 60 * 60 * 1000,
 					secure: true,
+					httpOnly: true,
+					sameSite: 'Lax'
 				},
 			}))
 			.use(compress({}))
@@ -157,7 +156,8 @@ export class Server extends ServerLoader {
 	}
 
 	public $afterRoutesInit(): void {
-		this.use(NotFoundMiddleware)
+		this.use(RegenerateTokenMiddleware)
+			.use(NotFoundMiddleware)
 			.use(ResponseMiddleware)
 			.use(ErrorHandlerMiddleware)
 	}

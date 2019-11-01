@@ -16,37 +16,18 @@
 import { isBoolean, isNumber, isObject, isStream, isString } from '@tsed/core';
 import {
 	IMiddleware,
-	OverrideProvider, Req,
+	OverrideProvider,
 	Res,
 	ResponseData,
 	SendResponseMiddleware,
 } from '@tsed/common';
-import { CookieOptions } from 'express';
-import { sign } from 'jsonwebtoken';
-import { PassportConfig } from '../config/passport.config';
-import { ServerConfig } from '../config/server.config';
 
 @OverrideProvider(SendResponseMiddleware)
 export class ResponseMiddleware extends SendResponseMiddleware implements IMiddleware {
 
 	public use(@ResponseData() data: any, @Res() response: Res) {
 
-		let message, token;
-
-		const { protocol, hostname } = (<any>response).crossOrigin;
-		const cookieName = 'x-access-token';
-		const cookieOptions: CookieOptions = {
-			domain: hostname,
-			expires: new Date(Date.now() + 60 * 60 * 1000),
-			secure: protocol === 'https',
-			httpOnly: true,
-			sameSite: 'None'
-		};
-
-		if (typeof (<any>response).user !== 'undefined' && (<any>response).user !== null) {
-			token = sign((<any>response).user, PassportConfig.jwt.secret);
-			response.cookie(cookieName, token, cookieOptions)
-		}
+		let message;
 
 		if (typeof data === 'undefined' || data === null) {
 			return response.json({
