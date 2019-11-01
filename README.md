@@ -13,4 +13,5 @@ A full stack intuitive point of sales application.
 
  * [Back-End](backend)
  * [Web](web)
+ * [iOS](ios)
  * Android (coming soon)
