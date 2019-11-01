@@ -130,7 +130,6 @@ export class Server extends ServerLoader {
 				);
 				next();
 			})
-			.use(cookieParser())
 			.use(session({
 				name: SessionConfig.name,
 				secret: SessionConfig.secret,
@@ -138,11 +137,11 @@ export class Server extends ServerLoader {
 				resave: true,
 				saveUninitialized: true,
 				cookie: {
-					domain: '.mycashier.pw',
+					// domain: '.mycashier.pw',
 					maxAge: 60 * 60 * 1000,
 					secure: true,
 					httpOnly: true,
-					sameSite: 'Lax'
+					// sameSite: 'Lax'
 				},
 			}))
 			.use(compress({}))
