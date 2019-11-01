@@ -136,6 +136,13 @@ export class Server extends ServerLoader {
 				store: new RedisStore({ client }),
 				resave: true,
 				saveUninitialized: true,
+				cookie: {
+					path: '/',
+					httpOnly: true,
+					secure: true,
+					maxAge: null,
+					sameSite: false
+				}
 			}))
 			.use(compress({}))
 			.use(methodOverride())
