@@ -286,9 +286,8 @@ export class AuthenticationController {
 			sameSite: 'None'
 		};
 		response.clearCookie('x-access-token', cookieOptions);
-		const { given_name } = (<any>request).user;
 		(<any>request).user = null;
-		return `See you again, ${ given_name }.Thank you for using MyCashier!`;
+		return `See you again. Thank you for using MyCashier!`;
 	}
 
 }
