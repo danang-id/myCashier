@@ -1,9 +1,9 @@
 <div align="center">
 <a href="https://mycashier.pw/" target="blank">
-<img src="assets/MyCashier.png" align="center" width="150" alt="MyCashier">
+<img src="assets/myCashier.png" align="center" width="150" alt="myCashier">
 </a>
 
-# MyCashier
+# myCashier
 
 A full stack intuitive point of sales application.
 
