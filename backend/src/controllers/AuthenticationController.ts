@@ -261,7 +261,7 @@ export class AuthenticationController {
 				throw new BadRequest('There is no account registered with email address ' + body.email_address + '.');
 			}
 			if (typeof token === 'undefined' || token.user_id !== user._id) {
-				throw new BadRequest('Your recovery token is invalid. Please re-check your activation link!');
+				throw new BadRequest('Your recovery token is invalid. Please re-check your recovery link!');
 			}
 			if (body.password !== body.password_confirmation) {
 				throw new BadRequest('Your password did not match confirmation.');
