@@ -280,10 +280,10 @@ export class AuthenticationController {
 	@Post('/sign-out')
 	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {
 		const cookieOptions: CookieOptions = {
-			secure: true,
-			httpOnly: true,
 			domain: `${ (<any>response).requestHostname || ServerConfig.productionURL }`,
-			sameSite: 'none'
+			secure: (<any>response).requestHostname !== 'localhost',
+			httpOnly: true,
+			sameSite: 'None'
 		};
 		response.clearCookie('x-access-token', cookieOptions);
 		(<any>request).user = null;

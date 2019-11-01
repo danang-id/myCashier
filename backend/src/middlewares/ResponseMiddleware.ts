@@ -35,11 +35,11 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 
 		const cookieName = 'x-access-token';
 		const cookieOptions: CookieOptions = {
-			secure: true,
-			httpOnly: true,
 			domain: `${ (<any>response).requestHostname || ServerConfig.productionURL }`,
 			expires: new Date(Date.now() + 60 * 60 * 1000),
-			sameSite: 'none'
+			secure: (<any>response).requestHostname !== 'localhost',
+			httpOnly: true,
+			sameSite: 'None'
 		};
 
 		if (typeof (<any>response).user !== 'undefined' && (<any>response).user !== null) {

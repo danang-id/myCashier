@@ -113,6 +113,7 @@ export class Server extends ServerLoader {
 			// 	}
 			// }))
 			.use((request: Req, response: Res, next: Next) => {
+				console.log(request.headers.host, request.hostname, request.originalUrl, request.headers.origin);
 				(<any>response).requestHostname = request.hostname;
 				response.header('Access-Control-Allow-Credentials', 'true');
 				response.header('Access-Control-Allow-Origin', request.headers.origin || ServerConfig.productionURL);
