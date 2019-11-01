@@ -25,6 +25,9 @@ import { ValidateRequest } from '../decorators/ValidateRequestDecorator';
 import { User } from '../model/User';
 import { ServerConfig } from '../config/server.config';
 import { Token } from '../model/Token';
+import { CookieOptions } from 'express';
+import { sign } from 'jsonwebtoken';
+import { PassportConfig } from '../config/passport.config';
 
 ;
 
@@ -276,7 +279,13 @@ export class AuthenticationController {
 
 	@Post('/sign-out')
 	public async signOut(@Res() response: Res): Promise<string> {
-		response.clearCookie('x-access-token');
+		const cookieOptions: CookieOptions = {
+			secure: true,
+			httpOnly: true,
+			domain: `${ (<any>response).requestHostname || ServerConfig.productionURL }`,
+			sameSite: 'none'
+		};
+		response.clearCookie('x-access-token', cookieOptions);
 		return 'Successfully signed out. Thank you for using MyCashier!';
 	}
 

@@ -113,7 +113,7 @@ export class Server extends ServerLoader {
 			// 	}
 			// }))
 			.use((request: Req, response: Res, next: Next) => {
-				(<any>response).requestHost = request.headers.host;
+				(<any>response).requestHostname = request.hostname;
 				response.header('Access-Control-Allow-Credentials', 'true');
 				response.header('Access-Control-Allow-Origin', request.headers.origin || ServerConfig.productionURL);
 				response.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');

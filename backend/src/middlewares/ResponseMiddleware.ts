@@ -21,6 +21,7 @@ import {
 	ResponseData,
 	SendResponseMiddleware,
 } from '@tsed/common';
+import { CookieOptions } from 'express';
 import { sign } from 'jsonwebtoken';
 import { PassportConfig } from '../config/passport.config';
 import { ServerConfig } from '../config/server.config';
@@ -33,11 +34,12 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		let message, token;
 
 		const cookieName = 'x-access-token';
-		const cookieOptions = {
+		const cookieOptions: CookieOptions = {
 			secure: true,
 			httpOnly: true,
-			domain: `.${ (<any>response).requestHost || ServerConfig.productionURL }`,
-			expires: new Date(Date.now() + 60 * 60 * 1000)
+			domain: `${ (<any>response).requestHostname || ServerConfig.productionURL }`,
+			expires: new Date(Date.now() + 60 * 60 * 1000),
+			sameSite: 'none'
 		};
 
 		if (typeof (<any>response).user !== 'undefined') {
