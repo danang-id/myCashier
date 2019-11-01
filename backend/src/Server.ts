@@ -112,6 +112,13 @@ export class Server extends ServerLoader {
 						origin = <string> request.headers.origin;
 					}
 				}
+				const protocol = origin.match(/^[^:]+/)[0];
+				const hostname = protocol === 'https'
+					? origin.substring(8).match(/^[^:]+/)[0]
+					: origin.substring(7).match(/^[^:]+/)[0];
+				(<any>response).crossOrigin = {
+					origin, protocol, hostname
+				};
 				response.header('Access-Control-Allow-Credentials', 'true');
 				response.header('Access-Control-Allow-Origin', origin);
 				response.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
@@ -122,21 +129,24 @@ export class Server extends ServerLoader {
 				next();
 			})
 			.use(cookieParser())
-			.use(session({
-				name: SessionConfig.name,
-				secret: SessionConfig.secret,
-				store: new RedisStore({ client }),
-				resave: false,
-				saveUninitialized: false,
-				cookie: {
-					maxAge: 60 * 60 * 1000,
-					sameSite: 'none',
-					httpOnly: true,
-					// @ts-ignore
-					secure: 'auto',
-				},
+			.use((request: Req, response: Res, next: Next) => {
+				const { hostname } = (<any>response).crossOrigin;
+				session({
+					name: SessionConfig.name,
+					secret: SessionConfig.secret,
+					store: new RedisStore({ client }),
+					resave: false,
+					saveUninitialized: false,
+					cookie: {
+						domain:'.'.concat(hostname),
+						maxAge: 60 * 60 * 1000,
+						sameSite: 'none',
+						httpOnly: true,
+						secure: true,
+					},
 
-			}))
+				})(request, response, next);
+			})
 			.use(compress({}))
 			.use(methodOverride())
 			.use(json())
