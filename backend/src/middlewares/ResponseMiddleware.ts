@@ -42,21 +42,15 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 
 		if (typeof (<any>response).user !== 'undefined') {
 			token = sign((<any>response).user, PassportConfig.jwt.secret);
+			response.cookie(cookieName, token, cookieOptions)
 		}
 
 		if (typeof data === 'undefined' || data === null) {
-			return typeof token !== 'undefined'
-				? response.cookie(cookieName, token, cookieOptions).json({
-					success: true,
-					code: 200,
-					token,
-					data
-				})
-				: response.json({
-					success: true,
-					code: 200,
-					data
-				});
+			return response.json({
+				success: true,
+				code: 200,
+				data
+			});
 		}
 
 		if (isStream(data)) {
@@ -65,9 +59,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		}
 
 		if (isString(data.$rendered)) {
-			return typeof token !== 'undefined'
-				? response.cookie(cookieName, token, cookieOptions).send(data.$rendered)
-				: response.send(data.$rendered);
+			return response.send(data.$rendered);
 		}
 
 		if (isString(data.$message)) {
@@ -85,51 +77,28 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		}
 
 		if (isString(data)) {
-			return typeof token !== 'undefined'
-				? response.cookie(cookieName, token, cookieOptions).json({
-					success: true,
-					code: 200,
-					token,
-					message: data
-				})
-				: response.json({
-					success: true,
-					code: 200,
-					message: data
-				});
+			return response.json({
+				success: true,
+				code: 200,
+				message: data
+			});
 		}
 
 		if (isBoolean(data) || isNumber(data)) {
-			return typeof token !== 'undefined'
-				? response.cookie(cookieName, token, cookieOptions).json({
-					success: true,
-					code: 200,
-					token,
-					message,
-					data
-				})
-				: response.json({
-					success: true,
-					code: 200,
-					message,
-					data
-				});
+			return response.json({
+				success: true,
+				code: 200,
+				message,
+				data
+			});
 		}
 
-		return typeof token !== 'undefined'
-			? response.cookie(cookieName, token, cookieOptions).json({
-				success: true,
-				code: 200,
-				token,
-				message,
-				data: this.converterService.serialize(data)
-			})
-			: response.json({
-				success: true,
-				code: 200,
-				message,
-				data: this.converterService.serialize(data)
-			});
+		return response.json({
+			success: true,
+			code: 200,
+			message,
+			data: this.converterService.serialize(data)
+		});
 	}
 
 }

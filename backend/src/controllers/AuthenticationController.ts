@@ -274,4 +274,10 @@ export class AuthenticationController {
 		}
 	}
 
+	@Post('/sign-out')
+	public async signOut(@Res() response: Res): Promise<string> {
+		response.clearCookie('x-access-token');
+		return 'Successfully signed out. Thank you for using MyCashier!';
+	}
+
 }
