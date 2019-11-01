@@ -36,7 +36,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 		const { protocol, hostname } = (<any>response).crossOrigin;
 		const cookieName = 'x-access-token';
 		const cookieOptions: CookieOptions = {
-			domain: '.'.concat(hostname),
+			domain: hostname,
 			expires: new Date(Date.now() + 60 * 60 * 1000),
 			secure: protocol === 'https',
 			httpOnly: true,

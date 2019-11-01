@@ -280,7 +280,7 @@ export class AuthenticationController {
 	@Post('/sign-out')
 	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {const { protocol, hostname } = (<any>response).crossOrigin;
 		const cookieOptions: CookieOptions = {
-			domain: '.'.concat(hostname),
+			domain: hostname,
 			secure: protocol === 'https',
 			httpOnly: true,
 			sameSite: 'None'
