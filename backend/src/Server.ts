@@ -19,15 +19,12 @@ import '@tsed/typeorm';
 import '@tsed/swagger';
 import '@tsed/ajv';
 import '@tsed/multipartfiles';
-// import { TooManyRequests } from 'ts-httpexceptions';
 
 import Path from 'path';
 import { ejs } from 'consolidate';
 import helmet from 'helmet';
-// import rateLimit from 'express-rate-limit'
-import session from 'express-session';
-import redis from 'redis';
-import connectRedis from 'connect-redis';
+import cookieParser from 'cookie-parser';
+import session from 'cookie-session';
 import compress from 'compression';
 import methodOverride from 'method-override';
 import { json, urlencoded } from 'body-parser';
@@ -38,7 +35,6 @@ import { DatabaseConfig } from './config/database.config';
 import { MailConfig } from './config/mail.config';
 import { ServerConfig } from './config/server.config';
 import { SessionConfig } from './config/session.config';
-import { MemoryConfig } from './config/memory.config';
 import { NotFoundMiddleware } from './middlewares/NotFoundMiddleware';
 import { ResponseMiddleware } from './middlewares/ResponseMiddleware';
 import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
@@ -95,22 +91,8 @@ export class Server extends ServerLoader {
 	}
 
 	public $beforeRoutesInit(): void {
-		const RedisStore = connectRedis(session);
-		const client = redis.createClient(MemoryConfig.redis.url);
 		this
 			.use(helmet())
-			// .use(rateLimit({
-			// 	windowMs: 60 * 60 * 1000,
-			// 	max: 100,
-			// 	handler(request) {
-			// 		const now = new Date();
-			// 		const resetTime = !!(<any>request).resetTime ? <Date> (<any>request).resetTime : now;
-			// 		if (resetTime.getTime() === now.getTime()) {
-			// 			resetTime.setTime(resetTime.getTime() + 60 * 60 * 1000);
-			// 		}
-			// 		throw new TooManyRequests(`Too many request submitted from your IP address. Please try again after ${resetTime.getMinutes()} minutes ${resetTime.getSeconds()} seconds.`);
-			// 	}
-			// }))
 			.use((request: Req, response: Res, next: Next) => {
 				let origin = 'https://'.concat(ServerConfig.productionURL);
 				if (!!request.headers.origin) {
@@ -129,12 +111,13 @@ export class Server extends ServerLoader {
 				);
 				next();
 			})
+			.use(cookieParser())
 			.use(session({
 				name: SessionConfig.name,
 				secret: SessionConfig.secret,
-				store: new RedisStore({ client }),
-				resave: true,
-				saveUninitialized: true,
+				httpOnly: true,
+				sameSite: false,
+				maxAge: 60 * 60 * 1000
 			}))
 			.use(compress({}))
 			.use(methodOverride())

@@ -65,8 +65,6 @@ export class AuthenticationController {
 		const { password, ...payload } = user;
 		(<any>request).user = payload;
 		(<any>response).user = payload;
-		request.session.cookie.sameSite = false;
-		request.session.cookie.secure = true;
 		request.session.token = sign(payload, PassportConfig.jwt.secret);
 		return { $message: `Welcome, ${ user.given_name }!` };
 	}
@@ -279,8 +277,7 @@ export class AuthenticationController {
 
 	@Post('/sign-out')
 	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {
-		request.session.token = void 0;
-		request.session.destroy(() => {});
+		request.session = null;
 		(<any>request).user = null;
 		return `See you again. Thank you for using MyCashier!`;
 	}
