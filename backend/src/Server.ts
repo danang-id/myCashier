@@ -30,7 +30,6 @@ import redis from 'redis';
 import connectRedis from 'connect-redis';
 import compress from 'compression';
 import methodOverride from 'method-override';
-import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'body-parser';
 import favicon from 'express-favicon';
 import SendGridMail from '@sendgrid/mail';
@@ -136,13 +135,6 @@ export class Server extends ServerLoader {
 				store: new RedisStore({ client }),
 				resave: true,
 				saveUninitialized: true,
-				cookie: {
-					path: '/',
-					httpOnly: true,
-					secure: true,
-					maxAge: null,
-					sameSite: false
-				}
 			}))
 			.use(compress({}))
 			.use(methodOverride())

@@ -65,6 +65,8 @@ export class AuthenticationController {
 		const { password, ...payload } = user;
 		(<any>request).user = payload;
 		(<any>response).user = payload;
+		request.session.cookie.sameSite = false;
+		request.session.cookie.secure = true;
 		request.session.token = sign(payload, PassportConfig.jwt.secret);
 		return { $message: `Welcome, ${ user.given_name }!` };
 	}
