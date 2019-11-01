@@ -130,7 +130,6 @@ export class Server extends ServerLoader {
 			})
 			.use(cookieParser())
 			.use((request: Req, response: Res, next: Next) => {
-				const { hostname } = (<any>response).crossOrigin;
 				session({
 					name: SessionConfig.name,
 					secret: SessionConfig.secret,
@@ -138,7 +137,6 @@ export class Server extends ServerLoader {
 					resave: false,
 					saveUninitialized: false,
 					cookie: {
-						domain: hostname,
 						maxAge: 60 * 60 * 1000,
 						sameSite: 'none',
 						httpOnly: true,
