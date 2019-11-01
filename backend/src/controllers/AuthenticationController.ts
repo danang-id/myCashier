@@ -277,7 +277,7 @@ export class AuthenticationController {
 
 	@Post('/sign-out')
 	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {
-		request.session = null;
+		request.session.destroy(() => {});
 		(<any>request).user = null;
 		return `See you again. Thank you for using MyCashier!`;
 	}

@@ -24,7 +24,9 @@ import Path from 'path';
 import { ejs } from 'consolidate';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import session from 'cookie-session';
+import session from 'express-session';
+import redis from 'redis';
+import connectRedis from 'connect-redis';
 import compress from 'compression';
 import methodOverride from 'method-override';
 import { json, urlencoded } from 'body-parser';
@@ -34,6 +36,7 @@ import SendGridMail from '@sendgrid/mail';
 import { DatabaseConfig } from './config/database.config';
 import { MailConfig } from './config/mail.config';
 import { ServerConfig } from './config/server.config';
+import { MemoryConfig } from './config/memory.config';
 import { SessionConfig } from './config/session.config';
 import { NotFoundMiddleware } from './middlewares/NotFoundMiddleware';
 import { ResponseMiddleware } from './middlewares/ResponseMiddleware';
@@ -91,6 +94,8 @@ export class Server extends ServerLoader {
 	}
 
 	public $beforeRoutesInit(): void {
+		const RedisStore = connectRedis(session);
+		const client = redis.createClient(MemoryConfig.redis.url);
 		this
 			.use(helmet())
 			.use((request: Req, response: Res, next: Next) => {
@@ -115,12 +120,16 @@ export class Server extends ServerLoader {
 			.use(session({
 				name: SessionConfig.name,
 				secret: SessionConfig.secret,
-				httpOnly: true,
-				secure: true,
-				secureProxy: true,
-				sameSite: 'lax',
-				domain: '.mycashier.pw',
-				maxAge: 60 * 60 * 1000
+				store: new RedisStore({ client }),
+				resave: false,
+				saveUninitialized: false,
+				cookie: {
+					maxAge: 60 * 60 * 1000,
+					httpOnly: true,
+					secure: true,
+					sameSite: false
+				},
+
 			}))
 			.use(compress({}))
 			.use(methodOverride())
