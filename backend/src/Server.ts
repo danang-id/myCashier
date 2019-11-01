@@ -136,13 +136,6 @@ export class Server extends ServerLoader {
 				store: new RedisStore({ client }),
 				resave: true,
 				saveUninitialized: true,
-				cookie: {
-					// domain: '.mycashier.pw',
-					maxAge: 60 * 60 * 1000,
-					secure: true,
-					httpOnly: true,
-					// sameSite: 'Lax'
-				},
 			}))
 			.use(compress({}))
 			.use(methodOverride())
