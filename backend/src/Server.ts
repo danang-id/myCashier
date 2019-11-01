@@ -127,7 +127,8 @@ export class Server extends ServerLoader {
 					maxAge: 60 * 60 * 1000,
 					sameSite: 'none',
 					httpOnly: true,
-					// secure: true,
+					// @ts-ignore
+					secure: 'auto',
 				},
 
 			}))
