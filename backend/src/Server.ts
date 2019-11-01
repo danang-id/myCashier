@@ -19,14 +19,15 @@ import '@tsed/typeorm';
 import '@tsed/swagger';
 import '@tsed/ajv';
 import '@tsed/multipartfiles';
+// import { TooManyRequests } from 'ts-httpexceptions';
 
 import Path from 'path';
 import { ejs } from 'consolidate';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit'
+// import rateLimit from 'express-rate-limit'
 import session from 'express-session';
-import redis from 'redis';
-import connectRedis from 'connect-redis';
+// import redis from 'redis';
+// import connectRedis from 'connect-redis';
 import compress from 'compression';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
@@ -40,9 +41,8 @@ import { ServerConfig } from './config/server.config';
 import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
 import { NotFoundMiddleware } from './middlewares/NotFoundMiddleware';
 import { ResponseMiddleware } from './middlewares/ResponseMiddleware';
-import { TooManyRequests } from 'ts-httpexceptions';
 import { SessionConfig } from './config/session.config';
-import { MemoryConfig } from './config/memory.config';
+// import { MemoryConfig } from './config/memory.config';
 import { RegenerateTokenMiddleware } from './middlewares/RegenerateTokenMiddleware';
 
 const rootDir = Path.resolve(__dirname);
@@ -97,8 +97,8 @@ export class Server extends ServerLoader {
 	}
 
 	public $beforeRoutesInit(): void {
-		const RedisStore = connectRedis(session);
-		const client = redis.createClient(MemoryConfig.redis.url);
+		// const RedisStore = connectRedis(session);
+		// const client = redis.createClient(MemoryConfig.redis.url);
 		this
 			.use(helmet())
 			// .use(rateLimit({
@@ -135,7 +135,7 @@ export class Server extends ServerLoader {
 			.use(session({
 				name: SessionConfig.name,
 				secret: SessionConfig.secret,
-				store: new RedisStore({ client }),
+				// store: new RedisStore({ client }),
 				resave: false,
 				saveUninitialized: true,
 				cookie: {
