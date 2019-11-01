@@ -69,7 +69,8 @@ export class AuthenticationController {
 		(<any>request).user = payload;
 		(<any>response).user = payload;
 		request.session.token = sign(payload, PassportConfig.jwt.secret);
-		return { $message: `Welcome, ${ user.given_name }!`, $data: { token: request.session.token } };
+		const $data = request.headers['use-token'] ? { token: request.session.token } : void 0;
+		return { $message: `Welcome, ${ user.given_name }!`, $data };
 	}
 
 	@Post('/register')
