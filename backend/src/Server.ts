@@ -138,7 +138,7 @@ export class Server extends ServerLoader {
 					resave: false,
 					saveUninitialized: false,
 					cookie: {
-						domain:'.'.concat(hostname),
+						domain: hostname,
 						maxAge: 60 * 60 * 1000,
 						sameSite: 'none',
 						httpOnly: true,
