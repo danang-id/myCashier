@@ -1,6 +1,6 @@
 {
-  "name": "MyCashier",
-  "short_name": "MyCashier",
+  "name": "myCashier",
+  "short_name": "myCashier",
   "description": "A full stack intuitive point of sales application.",
   "icons": [
     {
