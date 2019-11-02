@@ -165,7 +165,7 @@ export class TransactionController {
 			return {
 				$data: t,
 				$message: outOfStock
-					? 'Product ' + product.name + ' is out of stock.'
+					? product.name + ' is out of stock.'
 					: 'Successfully added ' + body.value + ' quantity of ' + product.name + '.'
 			};
 		} catch (error) {
