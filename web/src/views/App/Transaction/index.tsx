@@ -137,8 +137,8 @@ const Transaction: React.FC = () => {
 		if (typeof transaction._id === 'undefined') {
 			promises.push(doResetTransaction());
 		}
-		Promise.all(promises).then(() => {
-			return getTransaction(transaction._id);
+		Promise.all(promises).then((result: any[]) => {
+			return getTransaction(transaction ? transaction._id : result[1].data._id);
 		}).then((response: any) => {
 			dispatch(setShoppingCart(response.data.products.filter((p: any) => p.quantity > 0)));
 		}).catch((error: any) => {
