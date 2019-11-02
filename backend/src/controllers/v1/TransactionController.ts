@@ -50,7 +50,7 @@ export class TransactionController {
 		useTrim: true
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async findByID(@Req() request): Promise<Transaction & { products: Product[], quantity: number }> {
+	public async findByID(@Req() request): Promise<Transaction & { products: Product[] }> {
 		const query = {
 			_id: request.query._id
 		};
@@ -58,25 +58,25 @@ export class TransactionController {
 		if (typeof transaction === 'undefined') {
 			throw new NotFound('Transaction with ID ' + query._id + ' is not found.');
 		}
-		const responseObject: any = transaction;
+		const t: any = { ...transaction };
 		const productTransactions = await this.manager.find(ProductTransaction, {
 			transaction_id: transaction._id
 		});
-		responseObject.products = [];
+		t.products = [];
 		const productPromises = [];
 		for (const productTransaction of productTransactions) {
-			responseObject.products.push(productTransaction.quantity);
+			t.products.push(productTransaction.quantity);
 			productPromises.push(this.manager.findOne(Product, productTransaction.product_id));
 		}
 		const products = await Promise.all(productPromises);
 		for (const [index,product] of products.entries()) {
-			const quantity = responseObject.products[index];
-			responseObject.products[index] = {
+			const quantity = t.products[index];
+			t.products[index] = {
 				...product,
 				quantity
 			}
 		}
-		return responseObject;
+		return t;
 	}
 
 	@Post('/transaction')
@@ -103,7 +103,7 @@ export class TransactionController {
 		useTrim: true
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async addProductQuantity(@Req() request): Promise<{ $data: ProductTransaction, $message: string }> {
+	public async addProductQuantity(@Req() request): Promise<{ $data: Transaction & { products: Product[] }, $message: string }> {
 		const query = {
 			_id: request.query._id,
 		};
@@ -139,15 +139,31 @@ export class TransactionController {
 			}
 			productTransaction.quantity = productTransaction.quantity + body.value;
 			product.stock = product.stock - body.value;
-			const result = await Promise.all([
+			await Promise.all([
 				this.manager.save(productTransaction),
 				this.manager.save(product)
 			]);
-			productTransaction = result[0];
-			product = result[1];
+			const t: any = { ...transaction };
+			const productTransactions = await this.manager.find(ProductTransaction, {
+				transaction_id: transaction._id
+			});
+			t.products = [];
+			const productPromises = [];
+			for (const productTransaction of productTransactions) {
+				t.products.push(productTransaction.quantity);
+				productPromises.push(this.manager.findOne(Product, productTransaction.product_id));
+			}
+			const products = await Promise.all(productPromises);
+			for (const [index,product] of products.entries()) {
+				const quantity = t.products[index];
+				t.products[index] = {
+					...product,
+					quantity
+				}
+			}
 			await this.databaseService.commit();
 			return {
-				$data: productTransaction,
+				$data: t,
 				$message: outOfStock
 					? 'Product ' + product.name + ' is out of stock.'
 					: 'Successfully added ' + body.value + ' quantity of ' + product.name + '.'
@@ -165,7 +181,7 @@ export class TransactionController {
 		useTrim: true
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async reduceProductQuantity(@Req() request): Promise<{ $data: ProductTransaction, $message: string }> {
+	public async reduceProductQuantity(@Req() request): Promise<{ $data: Transaction & { products: Product[] }, $message: string }> {
 		const query = {
 			_id: request.query._id,
 		};
@@ -199,15 +215,31 @@ export class TransactionController {
 			}
 			productTransaction.quantity = productTransaction.quantity - body.value;
 			product.stock = product.stock + body.value;
-			const result = await Promise.all([
+			await Promise.all([
 				this.manager.save(productTransaction),
 				this.manager.save(product)
 			]);
-			productTransaction = result[0];
-			product = result[1];
+			const t: any = { ...transaction };
+			const productTransactions = await this.manager.find(ProductTransaction, {
+				transaction_id: transaction._id
+			});
+			t.products = [];
+			const productPromises = [];
+			for (const productTransaction of productTransactions) {
+				t.products.push(productTransaction.quantity);
+				productPromises.push(this.manager.findOne(Product, productTransaction.product_id));
+			}
+			const products = await Promise.all(productPromises);
+			for (const [index,product] of products.entries()) {
+				const quantity = t.products[index];
+				t.products[index] = {
+					...product,
+					quantity
+				}
+			}
 			await this.databaseService.commit();
 			return {
-				$data: productTransaction,
+				$data: t,
 				$message: 'Successfully reduced ' + request.body.value + ' quantity of ' + product.name + '.'
 			};
 		} catch (error) {
