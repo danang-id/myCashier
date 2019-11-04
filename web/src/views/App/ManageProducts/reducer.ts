@@ -74,7 +74,7 @@ const reducer: Reducer = (state: State = initialState, action: Action) => {
 				product: {}
 			};
 		case ProductActions.REMOVE_PRODUCT:
-			const productsAfterDeleted = state.products.fiter(
+			const productsAfterDeleted = state.products.filter(
 				(product: any) => product._id !== state.product._id
 			);
 			return {

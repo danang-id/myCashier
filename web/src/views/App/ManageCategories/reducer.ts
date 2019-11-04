@@ -53,7 +53,7 @@ const reducer: Reducer = (state: State = initialState, action: Action) => {
 				category: {}
 			};
 		case CategoryActions.REMOVE_CATEGORY:
-			const categoriesAfterDeleted = state.categories.fiter(
+			const categoriesAfterDeleted = state.categories.filter(
 				(category: any) => category._id !== state.category._id
 			);
 			return {
