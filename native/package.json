@@ -1,34 +1,29 @@
 {
+  "name": "myCashier",
+  "version": "0.0.1",
+  "private": true,
   "scripts": {
-    "postinstall": "jetify",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "web": "expo start --web",
     "start": "react-native start",
     "test": "jest"
   },
   "dependencies": {
-    "expo": "^35.0.0",
-    "react": "16.8.3",
-    "react-dom": "16.8.3",
-    "react-native": "0.59.10",
-    "react-native-gesture-handler": "~1.3.0",
-    "react-native-reanimated": "~1.2.0",
-    "react-native-screens": "1.0.0-alpha.23",
-    "react-native-unimodules": "~0.5.4",
-    "react-native-web": "^0.11.7"
+    "react": "16.8.1",
+    "react-native": "0.61.3",
+    "react-navigation": "^4.0.10",
+    "react-navigation-stack": "^1.10.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.0",
-    "@types/react": "^16.8.23",
-    "@types/react-native": "^0.57.65",
-    "babel-preset-expo": "^7.0.0",
-    "jest-expo": "^35.0.0",
-    "jetifier": "^1.6.4",
-    "typescript": "^3.4.5"
+    "@babel/core": "^7.5.0",
+    "@babel/runtime": "^7.5.0",
+    "@react-native-community/eslint-config": "^0.0.3",
+    "babel-jest": "^24.1.0",
+    "jest": "^24.1.0",
+    "metro-react-native-babel-preset": "^0.51.1",
+    "react-test-renderer": "16.8.1"
   },
   "jest": {
     "preset": "react-native"
-  },
-  "private": true
+  }
 }
