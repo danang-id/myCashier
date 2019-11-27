@@ -1,4 +1,38 @@
 {
-  "name": "myCashier",
-  "displayName": "myCashier"
+	"expo": {
+		"name": "myCashier",
+		"slug": "myCashier",
+		"privacy": "unlisted",
+		"sdkVersion": "35.0.0",
+		"platforms": [
+			"ios",
+			"android",
+			"web"
+		],
+		"githubUrl": "https://github.com/danang-id/myCashier",
+		"primaryColor": "#4882C3",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"splash": {
+			"image": "./src/assets/images/splash.png",
+			"resizeMode": "cover",
+			"backgroundColor": "#4882C3"
+		},
+		"updates": {
+			"fallbackToCacheTimeout": 0
+		},
+		"assetBundlePatterns": [
+			"**/*"
+		],
+		"android": {
+			"package": "id.danang.mycashier",
+			"icon": "./src/assets/images/app_icon_android.png"
+		},
+		"ios": {
+			"bundleIdentifier": "id.danang.mycashier",
+			"icon": "./src/assets/images/app_icon_ios.png",
+			"usesIcloudStorage": true,
+			"supportsTablet": true
+		}
+	}
 }
