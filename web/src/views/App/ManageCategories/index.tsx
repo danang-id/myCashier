@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 import PropTypes from 'prop-types';
 import clsx from "clsx";
 import {CircularProgress, makeStyles} from "@material-ui/core";
@@ -72,7 +72,15 @@ const getSorting = (order: string, orderBy: string) => {
 	return order === 'desc' ? (a: any, b: any) => desc(a, b, orderBy) : (a: any, b: any) => -desc(a, b, orderBy);
 };
 
-const EnhancedTableHead: React.FC = (props: any) => {
+type EnhancedTableHeadProps = {
+	classes: any,
+	order: any,
+	orderBy: any,
+	headCells: any[],
+	onRequestSort: Function
+}
+
+const EnhancedTableHead: React.FC<EnhancedTableHeadProps> = (props) => {
 	const { classes, order, orderBy, onRequestSort, headCells } = props;
 	const createSortHandler = (property: string) => (event: any) => {
 		onRequestSort(event, property);
@@ -400,15 +408,13 @@ const ManageCategories: React.FC = () => {
 								size="medium"
 								aria-label="Table Categories"
 							>
-								{/*
-								// @ts-ignore */}
-								<EnhancedTableHead
-									classes={classes}
-									order={order}
-									orderBy={orderBy}
-									onRequestSort={handleRequestSort}
-									headCells={headCells}
-								/>
+								{/*<EnhancedTableHead*/}
+								{/*	classes={classes}*/}
+								{/*	order={order}*/}
+								{/*	orderBy={orderBy}*/}
+								{/*	onRequestSort={handleRequestSort}*/}
+								{/*	headCells={headCells}*/}
+								{/*/>*/}
 								<TableBody>
 									{stableSort(categories, getSorting(order, orderBy))
 										.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)

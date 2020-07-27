@@ -75,7 +75,15 @@ const getSorting = (order: string, orderBy: string) => {
 	return order === 'desc' ? (a: any, b: any) => desc(a, b, orderBy) : (a: any, b: any) => -desc(a, b, orderBy);
 };
 
-const EnhancedTableHead: React.FC = (props: any) => {
+type EnhancedTableHeadProps = {
+	classes: any,
+	order: any,
+	orderBy: any,
+	headCells: any[],
+	onRequestSort: Function
+}
+
+const EnhancedTableHead: React.FC<EnhancedTableHeadProps> = (props) => {
 	const { classes, order, orderBy, onRequestSort, headCells } = props;
 	const createSortHandler = (property: string) => (event: any) => {
 		onRequestSort(event, property);
