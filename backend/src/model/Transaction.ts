@@ -15,14 +15,14 @@
 
 import { Default, Property, Required } from '@tsed/common';
 import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
-import uuid from 'uuid';
+import { v1 as uuidv1 } from 'uuid';
 
 @Entity()
 @Unique(['_id'])
 export class Transaction {
 	@PrimaryColumn({ length: 36 })
-	@Default(uuid.v1())
-	_id: string = uuid.v1();
+	@Default(uuidv1())
+	_id: string = uuidv1();
 
 	@Column({ length: 36 })
 	@Required()

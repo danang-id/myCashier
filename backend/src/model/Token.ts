@@ -15,7 +15,7 @@
 
 import { Default, Property, Required } from '@tsed/common';
 import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique } from 'typeorm';
-import uuid from 'uuid';
+import { v1 as uuidv1 } from 'uuid';
 
 @Entity()
 @Unique(['_id'])
