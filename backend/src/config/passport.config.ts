@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-require('dotenv').config();
+require("dotenv").config()
 
 export const PassportConfig = {
-	strategy: process.env.AUTH_STRATEGY || 'jwt',
+	strategy: process.env.AUTH_STRATEGY || "jwt",
 	jwt: {
 		secret: process.env.AUTH_JWT_SECRET,
 	},
-};
+}

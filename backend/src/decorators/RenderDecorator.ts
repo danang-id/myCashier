@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-import { applyDecorators, StoreSet } from '@tsed/core';
-import { ResponseViewMiddleware, UseAfter } from '@tsed/common';
-import { AttachViewMiddleware } from '../middlewares/AttachViewMiddleware';
+import { applyDecorators, StoreSet } from "@tsed/core"
+import { ResponseViewMiddleware, UseAfter } from "@tsed/common"
+import { AttachViewMiddleware } from "../middlewares/AttachViewMiddleware"
 
 export function Render(viewPath: string, viewOptions?: Object): Function {
 	return applyDecorators(
 		StoreSet(ResponseViewMiddleware, { viewPath, viewOptions }),
 		UseAfter(ResponseViewMiddleware),
 		UseAfter(AttachViewMiddleware)
-	);
+	)
 }

@@ -13,30 +13,30 @@
  * limitations under the License.
  */
 
-import { Controller, Post } from '@tsed/common';
-import { Docs } from '@tsed/swagger';
-import { EntityManager } from 'typeorm';
+import { Controller, Post } from "@tsed/common"
+import { Docs } from "@tsed/swagger"
+import { EntityManager } from "typeorm"
 
-import { DatabaseService } from '../../services/DatabaseService';
-import { MultipartFile } from '@tsed/multipartfiles';
-import { ValidateRequest } from '../../decorators/ValidateRequestDecorator';
+import { DatabaseService } from "../../services/DatabaseService"
+import { MultipartFile } from "@tsed/multipartfiles"
+import { ValidateRequest } from "../../decorators/ValidateRequestDecorator"
 
-@Controller('/')
-@Docs('api-v1')
+@Controller("/")
+@Docs("api-v1")
 export class FileController {
-	private manager: EntityManager;
+	private manager: EntityManager
 
 	constructor(private databaseService: DatabaseService) {}
 
 	public $afterRoutesInit(): void {
-		this.manager = this.databaseService.getManager();
+		this.manager = this.databaseService.getManager()
 	}
 
-	@Post('/file')
+	@Post("/file")
 	@ValidateRequest({
-		file: 'image',
+		file: "image",
 	})
-	public uploadFile(@MultipartFile('image') file: Express.Multer.File): string {
-		return 'File ' + file.originalname + ' has been uploaded successfully';
+	public uploadFile(@MultipartFile("image") file: Express.Multer.File): string {
+		return "File " + file.originalname + " has been uploaded successfully"
 	}
 }

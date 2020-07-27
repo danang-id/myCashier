@@ -13,43 +13,43 @@
  * limitations under the License.
  */
 
-import { isBoolean, isNumber, isObject, isStream, isString } from '@tsed/core';
-import { IMiddleware, OverrideProvider, Res, ResponseData, SendResponseMiddleware } from '@tsed/common';
+import { isBoolean, isNumber, isObject, isStream, isString } from "@tsed/core"
+import { IMiddleware, OverrideProvider, Res, ResponseData, SendResponseMiddleware } from "@tsed/common"
 
 @OverrideProvider(SendResponseMiddleware)
 export class ResponseMiddleware extends SendResponseMiddleware implements IMiddleware {
 	public use(@ResponseData() data: any, @Res() response: Res) {
-		let message;
+		let message
 
-		if (typeof data === 'undefined' || data === null) {
+		if (typeof data === "undefined" || data === null) {
 			return response.json({
 				success: true,
 				code: 200,
 				data,
-			});
+			})
 		}
 
 		if (isStream(data)) {
-			data.pipe(response);
-			return response;
+			data.pipe(response)
+			return response
 		}
 
 		if (isString(data.$rendered)) {
-			return response.send(data.$rendered);
+			return response.send(data.$rendered)
 		}
 
 		if (isString(data.$message)) {
-			const { $message, ...filtered } = data;
-			message = $message;
-			data = filtered;
+			const { $message, ...filtered } = data
+			message = $message
+			data = filtered
 		}
 
 		if (isObject(data.$data)) {
-			const { $data, ...original } = data;
+			const { $data, ...original } = data
 			data = {
 				...original,
 				...$data,
-			};
+			}
 		}
 
 		if (isString(data)) {
@@ -57,7 +57,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 				success: true,
 				code: 200,
 				message: data,
-			});
+			})
 		}
 
 		if (isBoolean(data) || isNumber(data)) {
@@ -66,7 +66,7 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 				code: 200,
 				message,
 				data,
-			});
+			})
 		}
 
 		return response.json({
@@ -74,6 +74,6 @@ export class ResponseMiddleware extends SendResponseMiddleware implements IMiddl
 			code: 200,
 			message,
 			data: this.converterService.serialize(data),
-		});
+		})
 	}
 }

@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-import { $log } from '@tsed/common';
-import { PlatformExpress } from '@tsed/platform-express';
-import { Server } from '../Server';
+import { $log } from "@tsed/common"
+import { PlatformExpress } from "@tsed/platform-express"
+import { Server } from "../Server"
 
-const config = require('dotenv').config();
+const config = require("dotenv").config()
 
 async function bootstrap() {
 	try {
-		$log.debug('Starting server...');
-		const server = await PlatformExpress.bootstrap(Server, config);
-		await server.listen();
-		$log.debug('Server initialised.');
+		$log.debug("Starting server...")
+		const server = await PlatformExpress.bootstrap(Server, config)
+		await server.listen()
+		$log.debug("Server initialised.")
 	} catch (error) {
-		$log.error(error);
+		$log.error(error)
 	}
 }
 
-bootstrap().then();
+bootstrap().then()

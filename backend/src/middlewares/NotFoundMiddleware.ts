@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-import { IMiddleware, Middleware, Req, ResponseData } from '@tsed/common';
-import { NotFound } from 'ts-httpexceptions';
+import { IMiddleware, Middleware, Req, ResponseData } from "@tsed/common"
+import { NotFound } from "ts-httpexceptions"
 
 @Middleware()
 export class NotFoundMiddleware implements IMiddleware {
 	public use(@ResponseData() data: any, @Req() request: Req): void {
-		if (typeof data === 'undefined') {
+		if (typeof data === "undefined") {
 			throw new NotFound(
 				"The resource you're looking for at " +
 					request.method.toUpperCase() +
-					' ' +
+					" " +
 					request.originalUrl +
-					' is not found.'
-			);
+					" is not found."
+			)
 		}
 	}
 }

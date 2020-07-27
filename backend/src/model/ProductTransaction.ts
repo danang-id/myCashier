@@ -13,30 +13,30 @@
  * limitations under the License.
  */
 
-import { Default, Property, Required } from '@tsed/common';
-import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
+import { Default, Property, Required } from "@tsed/common"
+import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from "typeorm"
 
 @Entity()
-@Unique(['product_id', 'transaction_id'])
+@Unique(["product_id", "transaction_id"])
 export class ProductTransaction {
 	@PrimaryColumn({ length: 36 })
 	@Required()
-	product_id: string;
+	product_id: string
 
 	@PrimaryColumn({ length: 36 })
 	@Required()
-	transaction_id: string;
+	transaction_id: string
 
 	@Column()
 	@Required()
 	@Default(0)
-	quantity: number = 0;
+	quantity: number = 0
 
-	@CreateDateColumn({ type: 'timestamp' })
+	@CreateDateColumn({ type: "timestamp" })
 	@Property()
-	created_at: Date;
+	created_at: Date
 
-	@UpdateDateColumn({ type: 'timestamp' })
+	@UpdateDateColumn({ type: "timestamp" })
 	@Property()
-	updated_at: Date;
+	updated_at: Date
 }

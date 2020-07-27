@@ -13,63 +13,70 @@
  * limitations under the License.
  */
 
-import { isArray, isString } from '@tsed/core';
-import { Req, Res, Next, Configuration, Inject, PlatformApplication } from '@tsed/common';
-import '@tsed/typeorm';
-import '@tsed/swagger';
-import '@tsed/ajv';
-import '@tsed/multipartfiles';
+import { isArray, isString } from "@tsed/core"
+import { Req, Res, Next, Configuration, Inject, PlatformApplication } from "@tsed/common"
+import "@tsed/typeorm"
+import "@tsed/swagger"
+import "@tsed/ajv"
+import "@tsed/multipartfiles"
 
-import fs from 'fs';
-import Path from 'path';
-import { ejs } from 'consolidate';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
-import session from 'express-session';
-import redis from 'redis';
-import connectRedis from 'connect-redis';
-import compress from 'compression';
-import methodOverride from 'method-override';
-import { json, urlencoded } from 'body-parser';
-import favicon from 'express-favicon';
-import SendGridMail from '@sendgrid/mail';
+import fs from "fs"
+import Path from "path"
+import helmet from "helmet"
+import cookieParser from "cookie-parser"
+import session from "express-session"
+import redis from "redis"
+import connectRedis from "connect-redis"
+import compress from "compression"
+import methodOverride from "method-override"
+import { json, urlencoded } from "body-parser"
+import favicon from "express-favicon"
+import SendGridMail from "@sendgrid/mail"
 
-import { DatabaseConfig } from './config/database.config';
-import { MailConfig } from './config/mail.config';
-import { ServerConfig } from './config/server.config';
-import { MemoryConfig } from './config/memory.config';
-import { SessionConfig } from './config/session.config';
-import { NotFoundMiddleware } from './middlewares/NotFoundMiddleware';
-import { ResponseMiddleware } from './middlewares/ResponseMiddleware';
-import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
+import { DatabaseConfig } from "./config/database.config"
+import { MailConfig } from "./config/mail.config"
+import { ServerConfig } from "./config/server.config"
+import { MemoryConfig } from "./config/memory.config"
+import { SessionConfig } from "./config/session.config"
+import { NotFoundMiddleware } from "./middlewares/NotFoundMiddleware"
+import { ResponseMiddleware } from "./middlewares/ResponseMiddleware"
+import { ErrorHandlerMiddleware } from "./middlewares/ErrorHandlerMiddleware"
+import { ServerOptions } from "https"
 
-const rootDir = Path.resolve(__dirname);
+const rootDir = Path.resolve(__dirname)
+const httpPort = ServerConfig.address + ":" + ServerConfig.port
+const httpsPort = ServerConfig.httpsEnable ? ServerConfig.address + ":" + (parseInt(ServerConfig.port) + 1) : false
+const httpsOptionsFunc = function () {
+	if (ServerConfig.httpsEnable) {
+		return <ServerOptions>{
+			key: fs.readFileSync(Path.join(__dirname, "..", "keys", "server.key")),
+			cert: fs.readFileSync(Path.join(__dirname, "..", "keys", "server.crt")),
+		}
+	}
+}
 
 @Configuration({
 	rootDir,
-	httpPort: ServerConfig.address + ':' + ServerConfig.port,
-	httpsPort: ServerConfig.httpsEnable ? ServerConfig.address + ':' + (parseInt(ServerConfig.port) + 1) : void 0,
-	httpsOptions: ServerConfig.httpsEnable
-		? {
-				key: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.key')),
-				cert: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.cert')),
-		  }
-		: void 0,
+	httpPort,
+	httpsPort,
+	httpsOptions: httpsOptionsFunc(),
 	viewsDir: `${rootDir}/views`,
 	mount: {
-		'/': `${rootDir}/controllers/*{.ts,.js}`,
-		'/v1': `${rootDir}/controllers/v1/**/*{.ts,.js}`,
+		"/": `${rootDir}/controllers/*{.ts,.js}`,
+		"/v1": `${rootDir}/controllers/v1/**/*{.ts,.js}`,
 	},
 	uploadDir: `${rootDir}/../data`,
 	typeorm: [
 		{
-			name: 'default',
+			name: "default",
 			type: <any>DatabaseConfig.type,
 			host: DatabaseConfig.host,
 			port: DatabaseConfig.port,
 			username: DatabaseConfig.username,
 			password: DatabaseConfig.password,
 			database: DatabaseConfig.name,
+			connectTimeout: 20000,
+			acquireTimeout: 20000,
 			synchronize: true,
 			logging: false,
 			entities: [`${rootDir}/model/*{.ts,.js}`],
@@ -79,8 +86,8 @@ const rootDir = Path.resolve(__dirname);
 	],
 	swagger: [
 		{
-			path: '/docs',
-			doc: 'api-v1',
+			path: "/docs",
+			doc: "api-v1",
 		},
 	],
 	ajv: {
@@ -89,17 +96,17 @@ const rootDir = Path.resolve(__dirname);
 })
 export class Server {
 	@Inject()
-	app: PlatformApplication;
+	app: PlatformApplication
 
 	@Configuration()
-	settings: Configuration;
+	settings: Configuration
 
 	public $beforeInit(): void {
 		// this.set('trust proxy', 1);
 		// this.set('views', this.settings.get('viewsDir'));
 		// this.engine('ejs', ejs);
 		if (MailConfig.sendGridEnable) {
-			SendGridMail.setApiKey(MailConfig.sendGridKey);
+			SendGridMail.setApiKey(MailConfig.sendGridKey)
 		}
 	}
 
@@ -107,38 +114,38 @@ export class Server {
 		this.app
 			.use(helmet())
 			.use((request: Req, response: Res, next: Next) => {
-				let origin = 'https://'.concat(ServerConfig.productionURL);
+				let origin = "https://".concat(ServerConfig.productionURL)
 				if (!!request.headers.origin) {
 					if (isArray(request.headers.origin) && request.headers.origin.length > 0) {
-						origin = <string>request.headers.origin[0];
+						origin = <string>request.headers.origin[0]
 					} else if (isString(request.headers.origin)) {
-						origin = <string>request.headers.origin;
+						origin = <string>request.headers.origin
 					}
 				}
-				const protocol = origin.match(/^[^:]+/)[0];
+				const protocol = origin.match(/^[^:]+/)[0]
 				const hostname =
-					protocol === 'https'
+					protocol === "https"
 						? origin.substring(8).match(/^[^:]+/)[0]
-						: origin.substring(7).match(/^[^:]+/)[0];
-				(<any>response).crossOrigin = {
+						: origin.substring(7).match(/^[^:]+/)[0]
+				;(<any>response).crossOrigin = {
 					origin,
 					protocol,
 					hostname,
-				};
-				response.header('Access-Control-Allow-Credentials', 'true');
-				response.header('Access-Control-Allow-Origin', origin);
-				response.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,DELETE,UPDATE,OPTIONS');
+				}
+				response.header("Access-Control-Allow-Credentials", "true")
+				response.header("Access-Control-Allow-Origin", origin)
+				response.header("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,UPDATE,OPTIONS")
 				response.header(
-					'Access-Control-Allow-Headers',
-					'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Authorization, Use-Token'
-				);
-				next();
+					"Access-Control-Allow-Headers",
+					"X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Authorization, Use-Token"
+				)
+				next()
 			})
 			.use(cookieParser())
 			.use((request: Req, response: Res, next: Next) => {
 				if (MemoryConfig.redis.enable) {
-					const RedisStore = connectRedis(session);
-					const client = redis.createClient(MemoryConfig.redis.url);
+					const RedisStore = connectRedis(session)
+					const client = redis.createClient(MemoryConfig.redis.url)
 					session({
 						name: SessionConfig.name,
 						secret: SessionConfig.secret,
@@ -147,11 +154,11 @@ export class Server {
 						saveUninitialized: false,
 						cookie: {
 							maxAge: 60 * 60 * 1000,
-							sameSite: 'none',
+							sameSite: "none",
 							httpOnly: true,
 							secure: true,
 						},
-					})(request, response, next);
+					})(request, response, next)
 				} else {
 					session({
 						name: SessionConfig.name,
@@ -160,11 +167,11 @@ export class Server {
 						saveUninitialized: false,
 						cookie: {
 							maxAge: 60 * 60 * 1000,
-							sameSite: 'none',
+							sameSite: "none",
 							httpOnly: true,
 							secure: true,
 						},
-					})(request, response, next);
+					})(request, response, next)
 				}
 			})
 			.use(compress({}))
@@ -175,10 +182,10 @@ export class Server {
 					extended: true,
 				})
 			)
-			.use(favicon(Path.join(__dirname, 'views', 'favicon.ico')));
+			.use(favicon(Path.join(__dirname, "views", "favicon.ico")))
 	}
 
 	public $afterRoutesInit(): void {
-		this.app.use(NotFoundMiddleware).use(ResponseMiddleware).use(ErrorHandlerMiddleware);
+		this.app.use(NotFoundMiddleware).use(ResponseMiddleware).use(ErrorHandlerMiddleware)
 	}
 }

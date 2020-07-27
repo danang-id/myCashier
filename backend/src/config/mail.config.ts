@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-require('dotenv').config();
+require("dotenv").config()
 
 export const MailConfig = {
-	sendGridEnable: process.env.SENDGRID_ENABLE == 'true' || false,
+	sendGridEnable: process.env.SENDGRID_ENABLE == "true" || false,
 	sendGridKey: process.env.SENDGRID_API_KEY,
-};
+}

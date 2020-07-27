@@ -13,57 +13,57 @@
  * limitations under the License.
  */
 
-import { Controller, Delete, Get, Patch, Post, Put, Req, UseAuth } from '@tsed/common';
-import { Docs } from '@tsed/swagger';
-import { BadRequest, NotFound } from 'ts-httpexceptions';
-import { EntityManager } from 'typeorm';
+import { Controller, Delete, Get, Patch, Post, Put, Req, UseAuth } from "@tsed/common"
+import { Docs } from "@tsed/swagger"
+import { BadRequest, NotFound } from "ts-httpexceptions"
+import { EntityManager } from "typeorm"
 
-import { DatabaseService } from '../../services/DatabaseService';
-import { ValidateRequest } from '../../decorators/ValidateRequestDecorator';
-import { Category } from '../../model/Category';
-import { Product } from '../../model/Product';
-import { AuthenticationMiddleware } from '../../middlewares/AuthenticationMiddleware';
+import { DatabaseService } from "../../services/DatabaseService"
+import { ValidateRequest } from "../../decorators/ValidateRequestDecorator"
+import { Category } from "../../model/Category"
+import { Product } from "../../model/Product"
+import { AuthenticationMiddleware } from "../../middlewares/AuthenticationMiddleware"
 
-@Controller('/')
-@Docs('api-v1')
+@Controller("/")
+@Docs("api-v1")
 export class CategoryController {
-	private manager: EntityManager;
+	private manager: EntityManager
 
 	constructor(private databaseService: DatabaseService) {}
 
 	public $afterRoutesInit(): void {
-		this.manager = this.databaseService.getManager();
+		this.manager = this.databaseService.getManager()
 	}
 
-	@Get('/categories')
+	@Get("/categories")
 	@ValidateRequest({
 		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async find(@Req() request): Promise<Category[]> {
-		return this.manager.find(Category);
+		return this.manager.find(Category)
 	}
 
-	@Get('/category')
+	@Get("/category")
 	@ValidateRequest({
-		query: ['_id'],
+		query: ["_id"],
 		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async findByID(@Req() request): Promise<Category> {
 		const query = {
 			_id: request.query._id,
-		};
-		const category = await this.manager.findOne(Category, query._id);
-		if (typeof category === 'undefined') {
-			throw new NotFound('Category with ID ' + query._id + ' is not found.');
 		}
-		return category;
+		const category = await this.manager.findOne(Category, query._id)
+		if (typeof category === "undefined") {
+			throw new NotFound("Category with ID " + query._id + " is not found.")
+		}
+		return category
 	}
 
-	@Post('/category')
+	@Post("/category")
 	@ValidateRequest({
-		body: ['name', 'description'],
+		body: ["name", "description"],
 		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
@@ -71,120 +71,120 @@ export class CategoryController {
 		const body = {
 			name: request.body.name,
 			description: request.body.description,
-		};
+		}
 		try {
-			await this.databaseService.startTransaction();
-			let category = new Category();
-			category.name = body.name;
-			category.description = body.description;
-			category = await this.manager.save(category);
-			await this.databaseService.commit();
-			return { $data: category, $message: 'Successfully created category "' + category.name + '".' };
+			await this.databaseService.startTransaction()
+			let category = new Category()
+			category.name = body.name
+			category.description = body.description
+			category = await this.manager.save(category)
+			await this.databaseService.commit()
+			return { $data: category, $message: 'Successfully created category "' + category.name + '".' }
 		} catch (error) {
-			await this.databaseService.rollback();
-			throw error;
+			await this.databaseService.rollback()
+			throw error
 		}
 	}
 
-	@Put('/category')
+	@Put("/category")
 	@ValidateRequest({
-		query: ['_id'],
-		body: ['name', 'description'],
+		query: ["_id"],
+		body: ["name", "description"],
 		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async replace(@Req() request): Promise<{ $data: Category; $message: string }> {
 		const query = {
 			_id: request.query._id,
-		};
+		}
 		const body = {
 			name: request.body.name,
 			description: request.body.description,
-		};
+		}
 		try {
-			await this.databaseService.startTransaction();
-			let category = await this.manager.findOne(Category, query._id);
-			if (typeof category === 'undefined') {
-				throw new NotFound('Category with ID ' + query._id + ' is not found.');
+			await this.databaseService.startTransaction()
+			let category = await this.manager.findOne(Category, query._id)
+			if (typeof category === "undefined") {
+				throw new NotFound("Category with ID " + query._id + " is not found.")
 			}
-			category.name = body.name;
-			category.description = body.description;
-			category = await this.manager.save(category);
-			await this.databaseService.commit();
-			return { $data: category, $message: 'Successfully replaced category to "' + category.name + '".' };
+			category.name = body.name
+			category.description = body.description
+			category = await this.manager.save(category)
+			await this.databaseService.commit()
+			return { $data: category, $message: 'Successfully replaced category to "' + category.name + '".' }
 		} catch (error) {
-			await this.databaseService.rollback();
-			throw error;
+			await this.databaseService.rollback()
+			throw error
 		}
 	}
 
-	@Patch('/category')
+	@Patch("/category")
 	@ValidateRequest({
-		query: ['_id'],
+		query: ["_id"],
 		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async modify(@Req() request): Promise<{ $data: Category; $message: string }> {
 		const query = {
 			_id: request.query._id,
-		};
+		}
 		const body = {
 			name: request.body.name,
 			description: request.body.description,
-		};
+		}
 		try {
-			await this.databaseService.startTransaction();
-			let category = await this.manager.findOne(Category, query._id);
-			if (typeof category === 'undefined') {
-				throw new NotFound('Category with ID ' + query._id + ' is not found.');
+			await this.databaseService.startTransaction()
+			let category = await this.manager.findOne(Category, query._id)
+			if (typeof category === "undefined") {
+				throw new NotFound("Category with ID " + query._id + " is not found.")
 			}
-			category.name = body.name || category.name;
-			category.description = body.description || category.description;
-			category = await this.manager.save(category);
-			await this.databaseService.commit();
-			return { $data: category, $message: 'Successfully modified category to "' + category.name + '".' };
+			category.name = body.name || category.name
+			category.description = body.description || category.description
+			category = await this.manager.save(category)
+			await this.databaseService.commit()
+			return { $data: category, $message: 'Successfully modified category to "' + category.name + '".' }
 		} catch (error) {
-			await this.databaseService.rollback();
-			throw error;
+			await this.databaseService.rollback()
+			throw error
 		}
 	}
 
-	@Delete('/category')
+	@Delete("/category")
 	@ValidateRequest({
-		query: ['_id'],
+		query: ["_id"],
 		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async delete(@Req() request): Promise<string> {
 		const query = {
 			_id: request.query._id,
-		};
+		}
 		try {
-			await this.databaseService.startTransaction();
-			let category = await this.manager.findOne(Category, query._id);
-			if (typeof category === 'undefined') {
-				throw new NotFound('Category with ID ' + query._id + ' is not found.');
+			await this.databaseService.startTransaction()
+			let category = await this.manager.findOne(Category, query._id)
+			if (typeof category === "undefined") {
+				throw new NotFound("Category with ID " + query._id + " is not found.")
 			}
 			const productsUnderThisCategory = await this.manager.find(Product, {
 				category_id: category._id,
-			});
+			})
 			if (productsUnderThisCategory.length > 0) {
-				const totalProduct = productsUnderThisCategory.length;
-				const counts = totalProduct === 1 ? 'is 1 product' : 'are ' + totalProduct + ' products';
+				const totalProduct = productsUnderThisCategory.length
+				const counts = totalProduct === 1 ? "is 1 product" : "are " + totalProduct + " products"
 				throw new BadRequest(
 					'Failed to delete category "' +
 						category.name +
 						'". Currently, there ' +
 						counts +
-						' that defined under this category. Please delete them first.'
-				);
+						" that defined under this category. Please delete them first."
+				)
 			}
-			await this.manager.remove(category);
-			await this.databaseService.commit();
-			return 'Successfully deleted category "' + category.name + '".';
+			await this.manager.remove(category)
+			await this.databaseService.commit()
+			return 'Successfully deleted category "' + category.name + '".'
 		} catch (error) {
-			await this.databaseService.rollback();
-			throw error;
+			await this.databaseService.rollback()
+			throw error
 		}
 	}
 }

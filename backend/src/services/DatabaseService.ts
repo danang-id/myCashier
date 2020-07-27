@@ -13,33 +13,33 @@
  * limitations under the License.
  */
 
-import { Service } from '@tsed/common';
-import { TypeORMService } from '@tsed/typeorm';
-import { EntityManager, QueryRunner } from 'typeorm';
+import { Service } from "@tsed/common"
+import { TypeORMService } from "@tsed/typeorm"
+import { EntityManager, QueryRunner } from "typeorm"
 
 @Service()
 export class DatabaseService {
-	private queryRunner: QueryRunner;
+	private queryRunner: QueryRunner
 
 	constructor(private typeORMService: TypeORMService) {}
 
 	$afterRoutesInit() {
-		this.queryRunner = this.typeORMService.get().createQueryRunner();
+		this.queryRunner = this.typeORMService.get().createQueryRunner()
 	}
 
 	public getManager(): EntityManager {
-		return this.queryRunner.manager;
+		return this.queryRunner.manager
 	}
 
 	public async startTransaction(): Promise<void> {
-		await this.queryRunner.startTransaction();
+		await this.queryRunner.startTransaction()
 	}
 
 	public async commit(): Promise<void> {
-		await this.queryRunner.commitTransaction();
+		await this.queryRunner.commitTransaction()
 	}
 
 	public async rollback(): Promise<void> {
-		await this.queryRunner.rollbackTransaction();
+		await this.queryRunner.rollbackTransaction()
 	}
 }

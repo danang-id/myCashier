@@ -13,31 +13,31 @@
  * limitations under the License.
  */
 
-import { Default, Property, Required } from '@tsed/common';
-import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
-import { v1 as uuidv1 } from 'uuid';
+import { Default, Property, Required } from "@tsed/common"
+import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from "typeorm"
+import { v1 as uuidv1 } from "uuid"
 
 @Entity()
-@Unique(['_id'])
+@Unique(["_id"])
 export class Category {
 	@PrimaryColumn({ length: 36 })
 	@Default(uuidv1())
-	_id: string = uuidv1();
+	_id: string = uuidv1()
 
 	@Column({ length: 255 })
 	@Required()
-	name: string;
+	name: string
 
 	@Column({ length: 1024 })
 	@Required()
-	@Default('')
-	description: string = '';
+	@Default("")
+	description: string = ""
 
-	@CreateDateColumn({ type: 'timestamp' })
+	@CreateDateColumn({ type: "timestamp" })
 	@Property()
-	created_at: Date;
+	created_at: Date
 
-	@UpdateDateColumn({ type: 'timestamp' })
+	@UpdateDateColumn({ type: "timestamp" })
 	@Property()
-	updated_at: Date;
+	updated_at: Date
 }

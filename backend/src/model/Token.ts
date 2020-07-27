@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-import { Default, Property, Required } from '@tsed/common';
-import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { Default, Property, Required } from "@tsed/common"
+import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique } from "typeorm"
+import { v4 as uuidv4 } from "uuid"
 
 @Entity()
-@Unique(['_id'])
+@Unique(["_id"])
 export class Token {
 	@PrimaryColumn({ length: 36 })
 	@Default(uuidv4())
-	_id: string = uuidv4();
+	_id: string = uuidv4()
 
 	@Column({ length: 36 })
 	@Required()
-	user_id: string;
+	user_id: string
 
-	@CreateDateColumn({ type: 'timestamp' })
+	@CreateDateColumn({ type: "timestamp" })
 	@Property()
-	created_at: Date;
+	created_at: Date
 }

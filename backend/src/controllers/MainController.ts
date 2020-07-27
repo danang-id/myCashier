@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { Controller, Get } from '@tsed/common';
+import { Controller, Get } from "@tsed/common"
 
-@Controller('/')
+@Controller("/")
 export class MainController {
 	// Empty for now
 }

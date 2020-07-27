@@ -13,34 +13,34 @@
  * limitations under the License.
  */
 
-import { Err, GlobalErrorHandlerMiddleware, IMiddleware, OverrideProvider, Req, Res } from '@tsed/common';
-import { Exception } from 'ts-httpexceptions';
-import { $log } from 'ts-log-debug';
+import { Err, GlobalErrorHandlerMiddleware, IMiddleware, OverrideProvider, Req, Res } from "@tsed/common"
+import { Exception } from "ts-httpexceptions"
+import { $log } from "ts-log-debug"
 
 @OverrideProvider(GlobalErrorHandlerMiddleware)
 export class ErrorHandlerMiddleware extends GlobalErrorHandlerMiddleware implements IMiddleware {
 	public use(@Err() error: any, @Req() request: Req, @Res() response: Res): void {
 		if (response.headersSent) {
-			throw error;
+			throw error
 		}
 		const craftErrorObject = (message: string, code: number) => ({
 			success: false,
 			code,
 			message,
-		});
+		})
 		if (error instanceof Exception) {
-			$log.error('' + error);
-			response.status(error.status).json(craftErrorObject(error.message, error.status));
-			return;
+			$log.error("" + error)
+			response.status(error.status).json(craftErrorObject(error.message, error.status))
+			return
 		}
 
-		if (typeof error === 'string') {
-			response.status(500).json(craftErrorObject(error, 500));
-			return;
+		if (typeof error === "string") {
+			response.status(500).json(craftErrorObject(error, 500))
+			return
 		}
 
-		$log.error('' + error);
-		response.status(error.status || 500).json(craftErrorObject(error.message, error.status || 500));
-		return;
+		$log.error("" + error)
+		response.status(error.status || 500).json(craftErrorObject(error.message, error.status || 500))
+		return
 	}
 }

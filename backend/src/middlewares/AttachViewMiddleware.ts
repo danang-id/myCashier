@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { IMiddleware, Middleware, ResponseData } from '@tsed/common';
+import { IMiddleware, Middleware, ResponseData } from "@tsed/common"
 
 @Middleware()
 export class AttachViewMiddleware implements IMiddleware {
 	public use(@ResponseData() data: any) {
-		return { $rendered: data };
+		return { $rendered: data }
 	}
 }

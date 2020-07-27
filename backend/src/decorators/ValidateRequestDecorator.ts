@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { Next, Req, Res, UseBefore } from '@tsed/common';
-import { applyDecorators, isString } from '@tsed/core';
-import { BadRequest } from 'ts-httpexceptions';
+import { Next, Req, Res, UseBefore } from "@tsed/common"
+import { applyDecorators, isString } from "@tsed/core"
+import { BadRequest } from "ts-httpexceptions"
 
 export function ValidateRequest(requirements: RequestRequirements): Function {
 	return applyDecorators(
@@ -23,65 +23,68 @@ export function ValidateRequest(requirements: RequestRequirements): Function {
 			if (Array.isArray(requirements.query)) {
 				for (const field of requirements.query) {
 					if (
-						typeof request.query[field] === 'undefined' ||
+						typeof request.query[field] === "undefined" ||
 						request.query[field] === null ||
-						request.query[field] === ''
+						request.query[field] === ""
 					) {
-						throw new BadRequest('Required query "' + field + '" is not satisfied.');
+						throw new BadRequest('Required query "' + field + '" is not satisfied.')
 					}
 				}
 			}
 			if (Array.isArray(requirements.body)) {
 				for (const field of requirements.body) {
 					if (
-						typeof request.body[field] === 'undefined' ||
+						typeof request.body[field] === "undefined" ||
 						request.body[field] === null ||
-						request.body[field] === ''
+						request.body[field] === ""
 					) {
-						throw new BadRequest('Required body "' + field + '" is not satisfied.');
+						throw new BadRequest('Required body "' + field + '" is not satisfied.')
 					}
 				}
 			}
 			if (isString(requirements.file)) {
-				const files = request.files;
-				const field = requirements.file;
+				const files = request.files
+				const field = requirements.file
 				if (!files || !files[requirements.file]) {
-					throw new BadRequest('Required file "' + field + '" is not satisfied.');
+					throw new BadRequest('Required file "' + field + '" is not satisfied.')
 				}
 			}
 			if (Array.isArray(requirements.files)) {
-				const files = request.files;
+				const files = request.files
 				if (!files) {
-					const field = requirements.files[0];
-					throw new BadRequest('Required file "' + field + '" is not satisfied.');
+					const field = requirements.files[0]
+					throw new BadRequest('Required file "' + field + '" is not satisfied.')
 				}
 				for (const field of requirements.files) {
 					if (!files[field]) {
-						throw new BadRequest('Required file "' + field + '" is not satisfied.');
+						throw new BadRequest('Required file "' + field + '" is not satisfied.')
 					}
 				}
 			}
 			if (requirements.useTrim === true) {
 				for (const field in request.query) {
-					if (request.query.hasOwnProperty(field) && typeof (request.query[field] as string).trim === 'function') {
-						request.query[field] = (request.query[field] as string).trim();
+					if (
+						request.query.hasOwnProperty(field) &&
+						typeof (request.query[field] as string).trim === "function"
+					) {
+						request.query[field] = (request.query[field] as string).trim()
 					}
 				}
 				for (const field in request.body) {
-					if (request.body.hasOwnProperty(field) && typeof request.body[field].trim === 'function') {
-						request.body[field] = request.body[field].trim();
+					if (request.body.hasOwnProperty(field) && typeof request.body[field].trim === "function") {
+						request.body[field] = request.body[field].trim()
 					}
 				}
 			}
-			next();
+			next()
 		})
-	);
+	)
 }
 
 export type RequestRequirements = {
-	body?: string[];
-	query?: string[];
-	file?: string;
-	files?: string[];
-	useTrim?: boolean;
-};
+	body?: string[]
+	query?: string[]
+	file?: string
+	files?: string[]
+	useTrim?: boolean
+}
