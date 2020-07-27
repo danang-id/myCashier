@@ -63,8 +63,8 @@ export function ValidateRequest(requirements: RequestRequirements): Function {
 			}
 			if (requirements.useTrim === true) {
 				for (const field in request.query) {
-					if (request.query.hasOwnProperty(field) && typeof request.query[field].trim === 'function') {
-						request.query[field] = request.query[field].trim();
+					if (request.query.hasOwnProperty(field) && typeof (request.query[field] as string).trim === 'function') {
+						request.query[field] = (request.query[field] as string).trim();
 					}
 				}
 				for (const field in request.body) {
