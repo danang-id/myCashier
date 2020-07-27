@@ -27,7 +27,6 @@ import { AuthenticationMiddleware } from '../../middlewares/AuthenticationMiddle
 @Controller('/')
 @Docs('api-v1')
 export class CategoryController {
-
 	private manager: EntityManager;
 
 	constructor(private databaseService: DatabaseService) {}
@@ -38,7 +37,7 @@ export class CategoryController {
 
 	@Get('/categories')
 	@ValidateRequest({
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async find(@Req() request): Promise<Category[]> {
@@ -48,12 +47,12 @@ export class CategoryController {
 	@Get('/category')
 	@ValidateRequest({
 		query: ['_id'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async findByID(@Req() request): Promise<Category> {
 		const query = {
-			_id: request.query._id
+			_id: request.query._id,
 		};
 		const category = await this.manager.findOne(Category, query._id);
 		if (typeof category === 'undefined') {
@@ -65,10 +64,10 @@ export class CategoryController {
 	@Post('/category')
 	@ValidateRequest({
 		body: ['name', 'description'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async create(@Req() request): Promise<{ $data: Category, $message: string }> {
+	public async create(@Req() request): Promise<{ $data: Category; $message: string }> {
 		const body = {
 			name: request.body.name,
 			description: request.body.description,
@@ -91,16 +90,16 @@ export class CategoryController {
 	@ValidateRequest({
 		query: ['_id'],
 		body: ['name', 'description'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async replace(@Req() request): Promise<{ $data: Category, $message: string }> {
+	public async replace(@Req() request): Promise<{ $data: Category; $message: string }> {
 		const query = {
 			_id: request.query._id,
 		};
 		const body = {
 			name: request.body.name,
-			description: request.body.description
+			description: request.body.description,
 		};
 		try {
 			await this.databaseService.startTransaction();
@@ -122,16 +121,16 @@ export class CategoryController {
 	@Patch('/category')
 	@ValidateRequest({
 		query: ['_id'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async modify(@Req() request): Promise<{ $data: Category, $message: string }> {
+	public async modify(@Req() request): Promise<{ $data: Category; $message: string }> {
 		const query = {
 			_id: request.query._id,
 		};
 		const body = {
 			name: request.body.name,
-			description: request.body.description
+			description: request.body.description,
 		};
 		try {
 			await this.databaseService.startTransaction();
@@ -153,7 +152,7 @@ export class CategoryController {
 	@Delete('/category')
 	@ValidateRequest({
 		query: ['_id'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async delete(@Req() request): Promise<string> {
@@ -167,16 +166,18 @@ export class CategoryController {
 				throw new NotFound('Category with ID ' + query._id + ' is not found.');
 			}
 			const productsUnderThisCategory = await this.manager.find(Product, {
-				category_id: category._id
+				category_id: category._id,
 			});
 			if (productsUnderThisCategory.length > 0) {
 				const totalProduct = productsUnderThisCategory.length;
 				const counts = totalProduct === 1 ? 'is 1 product' : 'are ' + totalProduct + ' products';
-				throw new BadRequest('Failed to delete category "' +
-					category.name +
-					'". Currently, there ' +
-					counts +
-					' that defined under this category. Please delete them first.')
+				throw new BadRequest(
+					'Failed to delete category "' +
+						category.name +
+						'". Currently, there ' +
+						counts +
+						' that defined under this category. Please delete them first.'
+				);
 			}
 			await this.manager.remove(category);
 			await this.databaseService.commit();
@@ -186,5 +187,4 @@ export class CategoryController {
 			throw error;
 		}
 	}
-
 }

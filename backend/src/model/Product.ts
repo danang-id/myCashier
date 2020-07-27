@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
-import { Default, Property, Required, } from '@tsed/common';
+import { Default, Property, Required } from '@tsed/common';
 import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
 import uuid from 'uuid';
 
 @Entity()
 @Unique(['_id'])
 export class Product {
-
 	@PrimaryColumn({ length: 36 })
 	@Default(uuid.v1())
 	_id: string = uuid.v1();
@@ -57,5 +56,4 @@ export class Product {
 	@UpdateDateColumn({ type: 'timestamp' })
 	@Property()
 	updated_at: Date;
-
 }

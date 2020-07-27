@@ -14,7 +14,7 @@
  */
 
 import { isArray, isString } from '@tsed/core';
-import { ServerLoader, ServerSettings, Req, Res, Next } from '@tsed/common';
+import { Req, Res, Next, Configuration, Inject, PlatformApplication } from '@tsed/common';
 import '@tsed/typeorm';
 import '@tsed/swagger';
 import '@tsed/ajv';
@@ -45,14 +45,16 @@ import { ErrorHandlerMiddleware } from './middlewares/ErrorHandlerMiddleware';
 
 const rootDir = Path.resolve(__dirname);
 
-@ServerSettings({
+@Configuration({
 	rootDir,
-	httpPort: ServerConfig.address + ':' + (+ServerConfig.port + 1),
-	httpsPort: ServerConfig.address + ':' + ServerConfig.port,
-	httpsOptions: {
-		key: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.key')),
-		cert: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.cert'))
-	},
+	httpPort: ServerConfig.address + ':' + ServerConfig.port,
+	httpsPort: ServerConfig.httpsEnable ? ServerConfig.address + ':' + (parseInt(ServerConfig.port) + 1) : void 0,
+	httpsOptions: ServerConfig.httpsEnable
+		? {
+				key: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.key')),
+				cert: fs.readFileSync(Path.join(__dirname, '..', 'keys', 'server.cert')),
+		  }
+		: void 0,
 	viewsDir: `${rootDir}/views`,
 	mount: {
 		'/': `${rootDir}/controllers/*{.ts,.js}`,
@@ -70,54 +72,58 @@ const rootDir = Path.resolve(__dirname);
 			database: DatabaseConfig.name,
 			synchronize: true,
 			logging: false,
-			entities: [
-				`${rootDir}/model/*{.ts,.js}`
-			],
-			migrations: [
-				`${rootDir}/migrations/*{.ts,.js}`
-			],
-			subscribers: [
-				`${rootDir}/subscriber/*{.ts,.js}`
-			]
-		}
+			entities: [`${rootDir}/model/*{.ts,.js}`],
+			migrations: [`${rootDir}/migrations/*{.ts,.js}`],
+			subscribers: [`${rootDir}/subscriber/*{.ts,.js}`],
+		},
 	],
-	swagger: [{
-		path: '/docs',
-		doc: 'api-v1',
-	}],
+	swagger: [
+		{
+			path: '/docs',
+			doc: 'api-v1',
+		},
+	],
 	ajv: {
 		errorFormat: (error) => `Parameter "${error.dataPath.substr(1)}" ${error.message}.`,
 	},
 })
-export class Server extends ServerLoader {
+export class Server {
+	@Inject()
+	app: PlatformApplication;
+
+	@Configuration()
+	settings: Configuration;
 
 	public $beforeInit(): void {
-		this.set('trust proxy', 1);
-		this.set('views', this.settings.get('viewsDir'));
-		this.engine('ejs', ejs);
-		SendGridMail.setApiKey(MailConfig.sendGridKey);
+		// this.set('trust proxy', 1);
+		// this.set('views', this.settings.get('viewsDir'));
+		// this.engine('ejs', ejs);
+		if (MailConfig.sendGridEnable) {
+			SendGridMail.setApiKey(MailConfig.sendGridKey);
+		}
 	}
 
 	public $beforeRoutesInit(): void {
-		const RedisStore = connectRedis(session);
-		const client = redis.createClient(MemoryConfig.redis.url);
-		this
+		this.app
 			.use(helmet())
 			.use((request: Req, response: Res, next: Next) => {
 				let origin = 'https://'.concat(ServerConfig.productionURL);
 				if (!!request.headers.origin) {
 					if (isArray(request.headers.origin) && request.headers.origin.length > 0) {
-						origin = <string> request.headers.origin[0];
+						origin = <string>request.headers.origin[0];
 					} else if (isString(request.headers.origin)) {
-						origin = <string> request.headers.origin;
+						origin = <string>request.headers.origin;
 					}
 				}
 				const protocol = origin.match(/^[^:]+/)[0];
-				const hostname = protocol === 'https'
-					? origin.substring(8).match(/^[^:]+/)[0]
-					: origin.substring(7).match(/^[^:]+/)[0];
+				const hostname =
+					protocol === 'https'
+						? origin.substring(8).match(/^[^:]+/)[0]
+						: origin.substring(7).match(/^[^:]+/)[0];
 				(<any>response).crossOrigin = {
-					origin, protocol, hostname
+					origin,
+					protocol,
+					hostname,
 				};
 				response.header('Access-Control-Allow-Credentials', 'true');
 				response.header('Access-Control-Allow-Origin', origin);
@@ -130,34 +136,49 @@ export class Server extends ServerLoader {
 			})
 			.use(cookieParser())
 			.use((request: Req, response: Res, next: Next) => {
-				session({
-					name: SessionConfig.name,
-					secret: SessionConfig.secret,
-					store: new RedisStore({ client }),
-					resave: false,
-					saveUninitialized: false,
-					cookie: {
-						maxAge: 60 * 60 * 1000,
-						sameSite: 'none',
-						httpOnly: true,
-						secure: true,
-					},
-
-				})(request, response, next);
+				if (MemoryConfig.redis.enable) {
+					const RedisStore = connectRedis(session);
+					const client = redis.createClient(MemoryConfig.redis.url);
+					session({
+						name: SessionConfig.name,
+						secret: SessionConfig.secret,
+						store: new RedisStore({ client }),
+						resave: false,
+						saveUninitialized: false,
+						cookie: {
+							maxAge: 60 * 60 * 1000,
+							sameSite: 'none',
+							httpOnly: true,
+							secure: true,
+						},
+					})(request, response, next);
+				} else {
+					session({
+						name: SessionConfig.name,
+						secret: SessionConfig.secret,
+						resave: false,
+						saveUninitialized: false,
+						cookie: {
+							maxAge: 60 * 60 * 1000,
+							sameSite: 'none',
+							httpOnly: true,
+							secure: true,
+						},
+					})(request, response, next);
+				}
 			})
 			.use(compress({}))
 			.use(methodOverride())
 			.use(json())
-			.use(urlencoded({
-				extended: true
-			}))
+			.use(
+				urlencoded({
+					extended: true,
+				})
+			)
 			.use(favicon(Path.join(__dirname, 'views', 'favicon.ico')));
 	}
 
 	public $afterRoutesInit(): void {
-		this.use(NotFoundMiddleware)
-			.use(ResponseMiddleware)
-			.use(ErrorHandlerMiddleware)
+		this.app.use(NotFoundMiddleware).use(ResponseMiddleware).use(ErrorHandlerMiddleware);
 	}
-
 }

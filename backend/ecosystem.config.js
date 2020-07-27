@@ -1,7 +1,7 @@
 module.exports = {
 	apps: [
 		{
-			name: 'MyCashier',
+			name: 'myCashier',
 			script: 'lib/bootstrap',
 			instances: 'max',
 			autorestart: true,

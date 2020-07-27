@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 
-import { Default, Property, Required, } from '@tsed/common';
+import { Default, Property, Required } from '@tsed/common';
 import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 @Unique(['product_id', 'transaction_id'])
 export class ProductTransaction {
-
 	@PrimaryColumn({ length: 36 })
 	@Required()
 	product_id: string;
@@ -40,5 +39,4 @@ export class ProductTransaction {
 	@UpdateDateColumn({ type: 'timestamp' })
 	@Property()
 	updated_at: Date;
-
 }

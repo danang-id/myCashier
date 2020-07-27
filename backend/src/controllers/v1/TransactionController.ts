@@ -29,7 +29,6 @@ import { AuthenticationMiddleware } from '../../middlewares/AuthenticationMiddle
 @Controller('/')
 @Docs('api-v1')
 export class TransactionController {
-
 	private manager: EntityManager;
 
 	constructor(private databaseService: DatabaseService) {}
@@ -47,12 +46,12 @@ export class TransactionController {
 	@Get('/transaction')
 	@ValidateRequest({
 		query: ['_id'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
 	public async findByID(@Req() request): Promise<Transaction & { products: Product[] }> {
 		const query = {
-			_id: request.query._id
+			_id: request.query._id,
 		};
 		const transaction = await this.manager.findOne(Transaction, query._id);
 		if (typeof transaction === 'undefined') {
@@ -60,7 +59,7 @@ export class TransactionController {
 		}
 		const t: any = { ...transaction };
 		const productTransactions = await this.manager.find(ProductTransaction, {
-			transaction_id: transaction._id
+			transaction_id: transaction._id,
 		});
 		t.products = [];
 		const productPromises = [];
@@ -69,19 +68,19 @@ export class TransactionController {
 			productPromises.push(this.manager.findOne(Product, productTransaction.product_id));
 		}
 		const products = await Promise.all(productPromises);
-		for (const [index,product] of products.entries()) {
+		for (const [index, product] of products.entries()) {
 			const quantity = t.products[index];
 			t.products[index] = {
 				...product,
-				quantity
-			}
+				quantity,
+			};
 		}
 		return t;
 	}
 
 	@Post('/transaction')
 	@UseAuth(AuthenticationMiddleware)
-	public async create(@Req() request): Promise<{ $data: Transaction, $message: string }> {
+	public async create(@Req() request): Promise<{ $data: Transaction; $message: string }> {
 		const user: User = (<any>request).user;
 		try {
 			await this.databaseService.startTransaction();
@@ -100,16 +99,18 @@ export class TransactionController {
 	@ValidateRequest({
 		query: ['_id'],
 		body: ['product_id', 'value'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async addProductQuantity(@Req() request): Promise<{ $data: Transaction & { products: Product[] }, $message: string }> {
+	public async addProductQuantity(
+		@Req() request
+	): Promise<{ $data: Transaction & { products: Product[] }; $message: string }> {
 		const query = {
 			_id: request.query._id,
 		};
 		const body = {
 			product_id: request.body.product_id,
-			value: parseInt(request.body.value)
+			value: parseInt(request.body.value),
 		};
 		try {
 			await this.databaseService.startTransaction();
@@ -122,10 +123,11 @@ export class TransactionController {
 				throw new NotFound('Category with ID ' + body.product_id + ' is not found.');
 			}
 			if (body.value <= 0) {
-				throw new BadRequest('Parameter "value" should be a positive integer. Given: ' + body.value + '.')
+				throw new BadRequest('Parameter "value" should be a positive integer. Given: ' + body.value + '.');
 			}
 			let productTransaction = await this.manager.findOne(ProductTransaction, {
-				transaction_id: transaction._id, product_id: product._id
+				transaction_id: transaction._id,
+				product_id: product._id,
 			});
 			if (typeof productTransaction === 'undefined') {
 				productTransaction = new ProductTransaction();
@@ -139,13 +141,10 @@ export class TransactionController {
 			}
 			productTransaction.quantity = productTransaction.quantity + body.value;
 			product.stock = product.stock - body.value;
-			await Promise.all([
-				this.manager.save(productTransaction),
-				this.manager.save(product)
-			]);
+			await Promise.all([this.manager.save(productTransaction), this.manager.save(product)]);
 			const t: any = { ...transaction };
 			const productTransactions = await this.manager.find(ProductTransaction, {
-				transaction_id: transaction._id
+				transaction_id: transaction._id,
 			});
 			t.products = [];
 			const productPromises = [];
@@ -154,19 +153,19 @@ export class TransactionController {
 				productPromises.push(this.manager.findOne(Product, productTransaction.product_id));
 			}
 			const products = await Promise.all(productPromises);
-			for (const [index,product] of products.entries()) {
+			for (const [index, product] of products.entries()) {
 				const quantity = t.products[index];
 				t.products[index] = {
 					...product,
-					quantity
-				}
+					quantity,
+				};
 			}
 			await this.databaseService.commit();
 			return {
 				$data: t,
 				$message: outOfStock
 					? product.name + ' is out of stock.'
-					: 'Successfully added ' + body.value + ' quantity of ' + product.name + '.'
+					: 'Successfully added ' + body.value + ' quantity of ' + product.name + '.',
 			};
 		} catch (error) {
 			await this.databaseService.rollback();
@@ -178,16 +177,18 @@ export class TransactionController {
 	@ValidateRequest({
 		query: ['_id'],
 		body: ['product_id', 'value'],
-		useTrim: true
+		useTrim: true,
 	})
 	@UseAuth(AuthenticationMiddleware)
-	public async reduceProductQuantity(@Req() request): Promise<{ $data: Transaction & { products: Product[] }, $message: string }> {
+	public async reduceProductQuantity(
+		@Req() request
+	): Promise<{ $data: Transaction & { products: Product[] }; $message: string }> {
 		const query = {
 			_id: request.query._id,
 		};
 		const body = {
 			product_id: request.body.product_id,
-			value: parseInt(request.body.value)
+			value: parseInt(request.body.value),
 		};
 		try {
 			await this.databaseService.startTransaction();
@@ -200,10 +201,11 @@ export class TransactionController {
 				throw new NotFound('Category with ID ' + body.product_id + ' is not found.');
 			}
 			if (body.value <= 0) {
-				throw new BadRequest('Parameter "value" should be a positive integer. Given: ' + body.value + '.')
+				throw new BadRequest('Parameter "value" should be a positive integer. Given: ' + body.value + '.');
 			}
 			let productTransaction = await this.manager.findOne(ProductTransaction, {
-				transaction_id: transaction._id, product_id: product._id
+				transaction_id: transaction._id,
+				product_id: product._id,
 			});
 			if (typeof productTransaction === 'undefined') {
 				productTransaction = new ProductTransaction();
@@ -215,13 +217,10 @@ export class TransactionController {
 			}
 			productTransaction.quantity = productTransaction.quantity - body.value;
 			product.stock = product.stock + body.value;
-			await Promise.all([
-				this.manager.save(productTransaction),
-				this.manager.save(product)
-			]);
+			await Promise.all([this.manager.save(productTransaction), this.manager.save(product)]);
 			const t: any = { ...transaction };
 			const productTransactions = await this.manager.find(ProductTransaction, {
-				transaction_id: transaction._id
+				transaction_id: transaction._id,
 			});
 			t.products = [];
 			const productPromises = [];
@@ -230,22 +229,21 @@ export class TransactionController {
 				productPromises.push(this.manager.findOne(Product, productTransaction.product_id));
 			}
 			const products = await Promise.all(productPromises);
-			for (const [index,product] of products.entries()) {
+			for (const [index, product] of products.entries()) {
 				const quantity = t.products[index];
 				t.products[index] = {
 					...product,
-					quantity
-				}
+					quantity,
+				};
 			}
 			await this.databaseService.commit();
 			return {
 				$data: t,
-				$message: 'Successfully reduced ' + request.body.value + ' quantity of ' + product.name + '.'
+				$message: 'Successfully reduced ' + request.body.value + ' quantity of ' + product.name + '.',
 			};
 		} catch (error) {
 			await this.databaseService.rollback();
 			throw error;
 		}
 	}
-
 }

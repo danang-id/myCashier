@@ -27,11 +27,11 @@ import { ServerConfig } from '../config/server.config';
 import { Token } from '../model/Token';
 import { sign } from 'jsonwebtoken';
 import { PassportConfig } from '../config/passport.config';
+import { MailConfig } from '../config/mail.config';
 
 @Controller('/')
 @Docs('api-v1')
 export class AuthenticationController {
-
 	private manager: EntityManager;
 
 	constructor(private databaseService: DatabaseService) {}
@@ -43,18 +43,21 @@ export class AuthenticationController {
 	@Post('/sign-in')
 	@ValidateRequest({
 		body: ['email_address', 'password'],
-		useTrim: true
+		useTrim: true,
 	})
-	public async signIn(@Req() request: Req, @Res() response: Res): Promise<{
-		$message: string,
-		$data: { token: string }
+	public async signIn(
+		@Req() request: Req,
+		@Res() response: Res
+	): Promise<{
+		$message: string;
+		$data: { token: string };
 	}> {
 		const body = {
 			email_address: request.body.email_address,
-			password: request.body.password
+			password: request.body.password,
 		};
 		const user = await this.manager.findOne(User, {
-			email_address: body.email_address
+			email_address: body.email_address,
 		});
 		if (typeof user === 'undefined') {
 			throw new BadRequest('Sign in failed! Please check your email address or password.');
@@ -63,20 +66,22 @@ export class AuthenticationController {
 			throw new BadRequest('Sign in failed! Please check your email address or password.');
 		}
 		if (!user.is_activated) {
-			throw new BadRequest(`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`)
+			throw new BadRequest(
+				`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`
+			);
 		}
 		const { password, ...payload } = user;
 		(<any>request).user = payload;
 		(<any>response).user = payload;
 		request.session.token = sign(payload, PassportConfig.jwt.secret);
 		const $data = request.headers['use-token'] ? { token: request.session.token } : void 0;
-		return { $message: `Welcome, ${ user.given_name }!`, $data };
+		return { $message: `Welcome, ${user.given_name}!`, $data };
 	}
 
 	@Post('/register')
 	@ValidateRequest({
 		body: ['given_name', 'maiden_name', 'email_address', 'password', 'password_confirmation'],
-		useTrim: true
+		useTrim: true,
 	})
 	public async register(@Req() request: Req): Promise<string> {
 		const body = {
@@ -84,18 +89,20 @@ export class AuthenticationController {
 			maiden_name: request.body.maiden_name,
 			email_address: request.body.email_address,
 			password: request.body.password,
-			password_confirmation: request.body.password_confirmation
+			password_confirmation: request.body.password_confirmation,
 		};
 		try {
-			await this.databaseService.startTransaction()
+			await this.databaseService.startTransaction();
 			const emailRegExp = new RegExp(
 				/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 			);
 			if (!emailRegExp.test(body.email_address)) {
-				throw new BadRequest('Registration failed. Email address "' + body.email_address + '" is not a valid email address.')
+				throw new BadRequest(
+					'Registration failed. Email address "' + body.email_address + '" is not a valid email address.'
+				);
 			}
 			let user = await this.manager.findOne(User, {
-				email_address: body.email_address
+				email_address: body.email_address,
 			});
 			if (typeof user !== 'undefined') {
 				throw new BadRequest('User with email address ' + body.email_address + ' is already registered.');
@@ -112,23 +119,28 @@ export class AuthenticationController {
 			let token = new Token();
 			token.user_id = user._id;
 			token = await this.manager.save(token);
-			const activationLink = ServerConfig.baseURL + `activate?email_address=${user.email_address}&token=${token._id}`
-			const message = {
-				to: user.email_address,
-				from: 'noreply@mycashier.pw',
-				subject: 'Active your MyCashier account!',
-				html: `
+			await this.databaseService.commit();
+			const activationLink =
+				ServerConfig.baseURL + `activate?email_address=${user.email_address}&token=${token._id}`;
+			if (MailConfig.sendGridEnable) {
+				const message = {
+					to: user.email_address,
+					from: 'mycashier@danang.id',
+					subject: 'Active your myCashier account!',
+					html: `
 <div>
 	Hi, ${user.given_name}!<br /><br />
-	Welcome to MyCashier! Please active your account by clicking on this link: <a href="${activationLink}">${activationLink}</a><br /><br />
+	Welcome to myCashier! Please active your account by clicking on this link: <a href="${activationLink}">${activationLink}</a><br /><br />
 	Regards,<br />
-	MyCashier Operation Team
+	myCashier Operation Team
 </div>
 `,
-			};
-			await SendGridMail.send(message);
-			await this.databaseService.commit()
-			return 'You are successfully registered. Please check your email inbox to activate your account.';
+				};
+				await SendGridMail.send(message);
+				return 'You are successfully registered. Please check your email inbox to activate your account.';
+			} else {
+				return `[Mail Service disabled] ${activationLink}`;
+			}
 		} catch (error) {
 			await this.databaseService.rollback();
 			throw error;
@@ -138,51 +150,52 @@ export class AuthenticationController {
 	@Post('/activate')
 	@ValidateRequest({
 		body: ['email_address', 'token'],
-		useTrim: true
+		useTrim: true,
 	})
 	public async activate(@Req() request: Req): Promise<string> {
 		const body = {
 			email_address: request.body.email_address,
-			token: request.body.token
+			token: request.body.token,
 		};
 		try {
 			await this.databaseService.startTransaction();
 			let [user, token] = await Promise.all([
 				this.manager.findOne(User, {
-					email_address: body.email_address
+					email_address: body.email_address,
 				}),
-				this.manager.findOne(Token, body.token)
+				this.manager.findOne(Token, body.token),
 			]);
 			if (typeof user === 'undefined') {
 				throw new BadRequest('There is no account registered with email address ' + body.email_address + '.');
 			}
 			if (user.is_activated) {
-				throw new BadRequest('User account with email address ' + body.email_address + ' has already been activated.');
+				throw new BadRequest(
+					'User account with email address ' + body.email_address + ' has already been activated.'
+				);
 			}
 			if (typeof token === 'undefined' || token.user_id !== user._id) {
 				throw new BadRequest('Your activation token is invalid. Please re-check your activation link!');
 			}
 			user.is_activated = true;
-			const result = await Promise.all([
-				this.manager.save(user),
-				this.manager.remove(Token, token)
-			]);
+			const result = await Promise.all([this.manager.save(user), this.manager.remove(Token, token)]);
 			user = result[0];
-			const message = {
-				to: user.email_address,
-				from: 'noreply@mycashier.pw',
-				subject: 'Welcome to MyCashier!',
-				html: `
+			await this.databaseService.commit();
+			if (MailConfig.sendGridEnable) {
+				const message = {
+					to: user.email_address,
+					from: 'mycashier@danang.id',
+					subject: 'Welcome to myCashier!',
+					html: `
 <div>
 	Hi, ${user.given_name}!<br /><br />
-	Welcome to MyCashier! Your account has been successfully activated. You now may sign in to enjoy our services.<br /><br />
+	Welcome to myCashier! Your account has been successfully activated. You now may sign in to enjoy our services.<br /><br />
 	Regards,<br />
-	MyCashier Operation Team
+	myCashier Operation Team
 </div>
 `,
-			};
-			await SendGridMail.send(message);
-			await this.databaseService.commit();
+				};
+				await SendGridMail.send(message);
+			}
 			return 'Your account has been successfully activated. You now may sign in to enjoy our services.';
 		} catch (error) {
 			await this.databaseService.rollback();
@@ -193,69 +206,74 @@ export class AuthenticationController {
 	@Post('/forget-password')
 	@ValidateRequest({
 		body: ['email_address'],
-		useTrim: true
+		useTrim: true,
 	})
 	public async forgetPassword(@Req() request: Req): Promise<string> {
 		const body = {
 			email_address: request.body.email_address,
 		};
 		try {
-			await this.databaseService.startTransaction()
+			await this.databaseService.startTransaction();
 			let user = await this.manager.findOne(User, {
-				email_address: body.email_address
+				email_address: body.email_address,
 			});
 			if (typeof user === 'undefined') {
 				throw new BadRequest('There is no account registered with email address ' + body.email_address + '.');
 			}
 			if (!user.is_activated) {
-				throw new BadRequest(`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`)
+				throw new BadRequest(
+					`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`
+				);
 			}
 			let token = new Token();
 			token.user_id = user._id;
 			token = await this.manager.save(token);
-			const recoverLink = ServerConfig.baseURL + `recover?email_address=${user.email_address}&token=${token._id}`
-			const message = {
-				to: user.email_address,
-				from: 'noreply@mycashier.pw',
-				subject: 'Recover your MyCashier account',
-				html: `
+			await this.databaseService.commit();
+			const recoverLink = ServerConfig.baseURL + `recover?email_address=${user.email_address}&token=${token._id}`;
+			if (MailConfig.sendGridEnable) {
+				const message = {
+					to: user.email_address,
+					from: 'mycashier@danang.id',
+					subject: 'Recover your myCashier account',
+					html: `
 <div>
 	Hi, ${user.given_name}!<br /><br />
-	To recover your MyCashier account, please click this link: <a href="${recoverLink}">${recoverLink}</a><br /><br />
+	To recover your myCashier account, please click this link: <a href="${recoverLink}">${recoverLink}</a><br /><br />
 	Regards,<br />
-	MyCashier Operation Team
+	myCashier Operation Team
 </div>
 `,
-			};
-			await SendGridMail.send(message);
-			await this.databaseService.commit();
-			return 'A recovery email has been sent to your email address. Please check your email inbox to recover your account.';
+				};
+				await SendGridMail.send(message);
+				return 'A recovery email has been sent to your email address. Please check your email inbox to recover your account.';
+			} else {
+				return `[Mail Service disabled] ${recoverLink}`;
+			}
 		} catch (error) {
 			await this.databaseService.rollback();
 			throw error;
 		}
 	}
 
-
 	@Post('/recover')
 	@ValidateRequest({
 		body: ['email_address', 'token', 'password', 'password_confirmation'],
-		useTrim: true
+		useTrim: true,
 	})
 	public async recover(@Req() request: Req): Promise<string> {
 		const body = {
 			email_address: request.body.email_address,
 			token: request.body.token,
 			password: request.body.password,
-			password_confirmation: request.body.password_confirmation
+			password_confirmation: request.body.password_confirmation,
 		};
 		try {
 			await this.databaseService.startTransaction();
 			let [user, token] = await Promise.all([
 				this.manager.findOne(User, {
-					email_address: body.email_address
+					email_address: body.email_address,
 				}),
-				this.manager.findOne(Token, body.token)
+				this.manager.findOne(Token, body.token),
 			]);
 			if (typeof user === 'undefined') {
 				throw new BadRequest('There is no account registered with email address ' + body.email_address + '.');
@@ -267,10 +285,7 @@ export class AuthenticationController {
 				throw new BadRequest('Your password did not match confirmation.');
 			}
 			user.password = hashSync(body.password, 10);
-			await Promise.all([
-				this.manager.save(user),
-				this.manager.remove(Token, token)
-			]);
+			await Promise.all([this.manager.save(user), this.manager.remove(Token, token)]);
 			await this.databaseService.commit();
 			return 'Your account has been successfully recovered. You now may sign in with newly created passwords.';
 		} catch (error) {
@@ -283,7 +298,6 @@ export class AuthenticationController {
 	public async signOut(@Req() request: Req, @Res() response: Res): Promise<string> {
 		request.session.destroy(() => {});
 		(<any>request).user = null;
-		return `See you again. Thank you for using MyCashier!`;
+		return `See you again. Thank you for using myCashier!`;
 	}
-
 }

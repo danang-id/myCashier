@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Default, IgnoreProperty, Property, Required, } from '@tsed/common';
+import { Default, IgnoreProperty, Property, Required } from '@tsed/common';
 import { Column, CreateDateColumn, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
 import uuid from 'uuid';
 
@@ -21,7 +21,6 @@ import uuid from 'uuid';
 @Unique(['_id'])
 @Unique(['email_address'])
 export class User {
-
 	@PrimaryColumn({ length: 36 })
 	@Default(uuid.v1())
 	_id: string = uuid.v1();
@@ -33,7 +32,6 @@ export class User {
 	@Column({ length: 255 })
 	@Required()
 	maiden_name: string;
-
 
 	@Column({ length: 255 })
 	@Required()
@@ -56,5 +54,4 @@ export class User {
 	@UpdateDateColumn({ type: 'timestamp' })
 	@Property()
 	updated_at: Date;
-
 }

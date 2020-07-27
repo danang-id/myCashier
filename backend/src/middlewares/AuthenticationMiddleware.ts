@@ -23,7 +23,6 @@ import { User } from '../model/User';
 
 @Middleware()
 export class AuthenticationMiddleware implements IMiddleware {
-
 	private manager: EntityManager;
 
 	constructor(private databaseService: DatabaseService) {}
@@ -32,37 +31,33 @@ export class AuthenticationMiddleware implements IMiddleware {
 		this.manager = this.databaseService.getManager();
 	}
 
-	public async use(
-		@Req() request: Req,
-		@Res() response: Res
-	): Promise<void> {
+	public async use(@Req() request: Req, @Res() response: Res): Promise<void> {
 		console.log('Check', request.session.token);
-		const requestToken = request.session.token ||
+		const requestToken =
+			request.session.token ||
 			request.cookies['x-access-token'] ||
 			request.headers['authorization'] ||
 			request.headers['x-access-token'];
 		if (!requestToken) {
 			throw new Unauthorized('Authentication needed to access this resource.');
 		}
-		const tokenString = Array.isArray(requestToken)
-			? requestToken[0]
-			: String(requestToken);
-		const token = tokenString.startsWith('Bearer ')
-			? tokenString.slice(7, tokenString.length)
-			: tokenString;
+		const tokenString = Array.isArray(requestToken) ? requestToken[0] : String(requestToken);
+		const token = tokenString.startsWith('Bearer ') ? tokenString.slice(7, tokenString.length) : tokenString;
 		try {
 			const payload = jwt.verify(token, PassportConfig.jwt.secret);
 			if (typeof payload === 'object' && typeof (<any>payload)._id === 'string') {
 				const user = await this.manager.findOne(User, (<any>payload)._id);
 				if (!user.is_activated) {
-					throw new Forbidden(`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`)
+					throw new Forbidden(
+						`Hi, ${user.given_name}! Your account is not activated yet. Please check your email to active your account.`
+					);
 				}
 				(<any>request).user = payload;
 				(<any>response).user = payload;
 			}
 		} catch (error) {
 			if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
-				error.message = `Authentication failed. The token you provided could not be proven authentic. [${error.name}|${error.message}]`
+				error.message = `Authentication failed. The token you provided could not be proven authentic. [${error.name}|${error.message}]`;
 			}
 			if (error.name === 'TokenExpiredError') {
 				error.message = `Your session has been expired. Please sign in again. [${error.name}|${error.message}]`;
@@ -73,5 +68,4 @@ export class AuthenticationMiddleware implements IMiddleware {
 			throw new Unauthorized('You are not authenticated to access this resource.');
 		}
 	}
-
 }

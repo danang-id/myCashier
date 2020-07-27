@@ -20,7 +20,6 @@ import uuid from 'uuid';
 @Entity()
 @Unique(['_id'])
 export class Token {
-
 	@PrimaryColumn({ length: 36 })
 	@Default(uuid.v4())
 	_id: string = uuid.v4();
@@ -32,5 +31,4 @@ export class Token {
 	@CreateDateColumn({ type: 'timestamp' })
 	@Property()
 	created_at: Date;
-
 }

@@ -16,8 +16,9 @@
 require('dotenv').config();
 
 export const ServerConfig = {
-	baseURL: process.env.BASE_URL || 'https://mycashier.pw/',
+	baseURL: process.env.BASE_URL || 'https://mycashier.danang.id/',
 	address: process.env.ADDRESS || '0.0.0.0',
 	port: process.env.PORT || '8000',
-	productionURL: process.env.PRODUCTION_URL || 'localhost:8000'
+	productionURL: process.env.PRODUCTION_URL || 'localhost:8000',
+	httpsEnable: process.env.HTTPS_ENABLE == 'true' || false,
 };

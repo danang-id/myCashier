@@ -24,7 +24,6 @@ import { ValidateRequest } from '../../decorators/ValidateRequestDecorator';
 @Controller('/')
 @Docs('api-v1')
 export class FileController {
-
 	private manager: EntityManager;
 
 	constructor(private databaseService: DatabaseService) {}
@@ -35,10 +34,9 @@ export class FileController {
 
 	@Post('/file')
 	@ValidateRequest({
-		file: 'image'
+		file: 'image',
 	})
 	public uploadFile(@MultipartFile('image') file: Express.Multer.File): string {
 		return 'File ' + file.originalname + ' has been uploaded successfully';
 	}
-
 }
