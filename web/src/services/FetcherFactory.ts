@@ -31,9 +31,10 @@ const getCookie = (name: string) => {
 };
 
 const userAgent = window.navigator.userAgent;
-export const shouldUseToken = !!userAgent.match(/iPad/i)
-	|| !!userAgent.match(/iPhone/i)
-	|| !!userAgent.match(/WebKit/i);
+// export const shouldUseToken = !!userAgent.match(/iPad/i)
+// 	|| !!userAgent.match(/iPhone/i)
+// 	|| !!userAgent.match(/WebKit/i);
+export const shouldUseToken = true;
 
 class FetcherFactory {
 
